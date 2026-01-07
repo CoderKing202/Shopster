@@ -1,46 +1,41 @@
-import React from "react";
 
-function Home() {
+import React, { use, useState } from "react";
+import Corousel from "./Corousel";
+import { useEffect } from "react";
+import axios from "axios";
+import Categories from "./Categories";
+
+function Home(props) {
+  const [slideImages,setslideImages] = useState([])
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get("https://dummyjson.com/products?limit=5");
+
+      const products = res.data.products;
+
+      // create array of 5 image URLs (first image of each product)
+      const imageUrls = products.map(product => product.images[0]);
+
+      setslideImages(imageUrls);
+    } catch (err) {
+      console.error("Error fetching products:", err);
+    }
+  };
+
+  fetchProducts();
+}, []);
+
+console.log(slideImages)
   return (
     <div className="bg-light">
       <div className="container py-2">
-        {/* Top category bar */}
-        <div className="bg-white d-flex justify-content-between text-center py-2 mb-3">
-          {[
-            "Category 1",
-            "Category 2",
-            "Category 3",
-            "Category 4",
-            "Category 5",
-            "Category 6",
-            "Category 7",
-            "Category 8",
-            "Category 9",
-          ].map((item) => (
-            <div key={item} className="d-flex flex-column align-items-center small">
-              <div
-                className="rounded-circle bg-light mb-1"
-                style={{ width: "40px", height: "40px" }}
-              />
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
+        
+     
 
         {/* Hero banner */}
-        <div className="bg-primary text-white d-flex justify-content-between align-items-center px-4 py-4 rounded mb-3">
-          <div>
-            <h3 className="mb-1">Hero Title</h3>
-            <h4 className="mb-1">Some Highlight Text</h4>
-            <p className="mb-0">Short description about this banner</p>
-          </div>
-          <div
-            className="bg-white rounded"
-            style={{ width: "260px", height: "160px" }}
-          />
-        </div>
-
-        {/* First product row */}
+       <Corousel images={slideImages}/>
+<Categories/>        {/* First product row */}
         <SectionRow title="Featured Items">
           <ProductCard title="Item A" subtitle="Extra info" />
           <ProductCard title="Item B" subtitle="Extra info" />
