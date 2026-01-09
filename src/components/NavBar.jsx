@@ -1,50 +1,152 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 function NavBar() {
+  const navigate = useNavigate()
+  const collapseRef = useRef(null)
+
+  const [products, setProducts] = useState([])
+  const [query, setQuery] = useState('')
+  const [filtered, setFiltered] = useState([])
+  const [highlightedIndex, setHighlightedIndex] = useState(-1)
+
+  const handleCart = () => navigate("/loginplease")
+  const handleProfile = () => navigate("/loginplease")
+
+  useEffect(() => {
+    fetch('https://dummyjson.com/products?limit=100')
+      .then(res => res.json())
+      .then(data => setProducts(data.products))
+  }, [])
+
+  // Debounced filtering
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (query.trim() === '') {
+        setFiltered([])
+      } else {
+        const q = query.toLowerCase()
+        setFiltered(
+          products.filter(p => p.title.toLowerCase().includes(q)).slice(0, 6)
+        )
+      }
+    }, 250)
+
+    return () => clearTimeout(timeout)
+  }, [query, products])
+
+  const closeMenu = () => {
+    const el = document.getElementById("navbarContent")
+    if (el?.classList.contains("show")) {
+      el.classList.remove("show")
+    }
+  }
+
+  const handleSelect = (id) => {
+    setQuery('')
+    setFiltered([])
+    setHighlightedIndex(-1)
+    navigate(`/product/${id}`)
+    closeMenu()
+  }
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+    if (!query.trim()) return
+    navigate(`/search/${encodeURIComponent(query.trim())}`)
+    setFiltered([])
+    setHighlightedIndex(-1)
+    closeMenu()
+  }
+
+  const handleKeyDown = (e) => {
+    if (!filtered.length) return
+
+    if (e.key === "ArrowDown") {
+      setHighlightedIndex(i => Math.min(i + 1, filtered.length - 1))
+    } else if (e.key === "ArrowUp") {
+      setHighlightedIndex(i => Math.max(i - 1, 0))
+    } else if (e.key === "Enter" && highlightedIndex >= 0) {
+      handleSelect(filtered[highlightedIndex].id)
+    }
+  }
+
+  const highlightMatch = (text, query) => {
+    if (!query) return text
+    const i = text.toLowerCase().indexOf(query.toLowerCase())
+    if (i === -1) return text
+    return (
+      <>
+        {text.slice(0, i)}
+        <strong>{text.slice(i, i + query.length)}</strong>
+        {text.slice(i + query.length)}
+      </>
+    )
+  }
+
   return (
-    <nav className="navbar navbar-expand-lg bg-body-tertiary">
-  <div className="container-fluid">
-    <Link className="navbar-brand" to="/">Shopster</Link>
-    <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span className="navbar-toggler-icon"></span>
-    </button>
-    <div className="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-        <li className="nav-item">
-          <Link className="nav-link active" aria-current="page" to="/">Home</Link>
-        </li>
-        <li className="nav-item">
-          <Link className="nav-link" to="/shop"></Link>
-        </li>
-        <li className="nav-item">
-          <Link className="nav-link" to="/shop"></Link>
-        </li>
-        <li className="nav-item">
-          <Link className="nav-link" to="/shop"></Link>
-        </li>
-        <li className="nav-item dropdown">
-          <Link className="nav-link dropdown-toggle" to="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Dropdown
-          </Link>
-          <ul className="dropdown-menu">
-            <li><Link className="dropdown-item" to="#">Action</Link></li>
-            <li><Link className="dropdown-item" to="#">Another action</Link></li>
-            <li><hr className="dropdown-divider"/></li>
-            <li><Link className="dropdown-item" to="#">Something else here</Link></li>
+    <nav className="navbar navbar-expand-lg bg-body-tertiary sticky-top">
+      <div className="container-fluid">
+
+        <Link className="navbar-brand" to="/" onClick={closeMenu}>Shopster</Link>
+
+        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        <div className="collapse navbar-collapse" id="navbarContent" ref={collapseRef}>
+
+          <ul className="navbar-nav mb-2 mb-lg-0">
+            <li className="nav-item">
+              <Link className="nav-link active" to="/" onClick={closeMenu}>Home</Link>
+            </li>
           </ul>
-        </li>
-        <li className="nav-item">
-          <Link className="nav-link disabled" aria-disabled="true">Disabled</Link>
-        </li>
-      </ul>
-      <form className="d-flex" role="search">
-        <input className="form-control me-2" type="search" placeholder="Search" aria-label="Search"/>
-        <button className="btn btn-outline-success" type="submit">Search</button>
-      </form>
-    </div>
-  </div>
-</nav>
+
+          <form
+            onSubmit={handleSearchSubmit}
+            className="position-relative mx-lg-auto my-2 my-lg-0 d-flex"
+            style={{ width: "100%", maxWidth: "550px" }}
+          >
+            <input
+              className="form-control me-2"
+              type="search"
+              placeholder="Search products..."
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            <button className="btn btn-outline-success" type="submit">Search</button>
+
+            {filtered.length > 0 && (
+              <ul className="list-group position-absolute w-100 shadow" style={{ top: "100%", zIndex: 1000 }}>
+                {filtered.map((p, i) => (
+                  <li
+                    key={p.id}
+                    className={`list-group-item list-group-item-action ${i === highlightedIndex ? "active" : ""}`}
+                    style={{ cursor: 'pointer' }}
+                    onMouseEnter={() => setHighlightedIndex(i)}
+                    onClick={() => handleSelect(p.id)}
+                  >
+                    {highlightMatch(p.title, query)}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </form>
+
+          <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-3 ms-lg-auto mt-3 mt-lg-0">
+            <Link to="/login" className="btn btn-outline-primary w-100 w-lg-auto" onClick={closeMenu}>Login</Link>
+            <Link to="/signup" className="btn btn-primary w-100 w-lg-auto" onClick={closeMenu}>Signup</Link>
+
+            <div className="d-flex gap-3">
+              <img src="https://cdn-icons-png.flaticon.com/512/263/263142.png" alt="Cart" width="28" onClick={handleCart} style={{ cursor: 'pointer' }} />
+              <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Profile" width="28" onClick={handleProfile} style={{ cursor: 'pointer' }} />
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </nav>
   )
 }
 
