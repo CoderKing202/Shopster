@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 
 function SignUp(props) {
   const navigate = useNavigate();
@@ -11,9 +10,22 @@ function SignUp(props) {
     cpassword: "",
   });
 
+  const [errors, setErrors] = useState({
+    passwordMismatch: false,
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { name, email, password, cpassword } = credentials;
+
+    // Check if passwords match
+    if (credentials.password !== credentials.cpassword) {
+      setErrors({ passwordMismatch: true });
+      return; // Stop submission
+    } else {
+      setErrors({ passwordMismatch: false });
+    }
+
+    const { name, email, password } = credentials;
     const response = await fetch("http://localhost:3000/api/auth/createuser", {
       method: "POST",
       headers: {
@@ -27,19 +39,29 @@ function SignUp(props) {
     if (json.success) {
       localStorage.setItem("token", json.authtoken);
       navigate("/");
-      props.showAlert("Account Created Successfully", "success");
     } else {
-      props.showAlert("Invalid details", "danger");
+      // Handle error (optional)
     }
   };
 
   const onChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
+
+    // Reset password mismatch error on typing
+    if (e.target.name === "password" || e.target.name === "cpassword") {
+      setErrors({ passwordMismatch: false });
+    }
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center" style={{ minHeight: "90vh" }}>
-      <div className="card shadow-lg p-4" style={{ maxWidth: "420px", width: "100%", borderRadius: "12px" }}>
+    <div
+      className="container d-flex justify-content-center align-items-center"
+      style={{ minHeight: "90vh" }}
+    >
+      <div
+        className="card shadow-lg p-4"
+        style={{ maxWidth: "420px", width: "100%", borderRadius: "12px" }}
+      >
         <div className="text-center mb-3">
           <h3 className="fw-bold">Create Account</h3>
           <p className="text-muted">Join us and start shopping smarter</p>
@@ -57,6 +79,8 @@ function SignUp(props) {
               onChange={onChange}
               name="name"
               placeholder="Enter your full name"
+              required
+              minLength={5}
             />
           </div>
 
@@ -71,6 +95,7 @@ function SignUp(props) {
               onChange={onChange}
               name="email"
               placeholder="Enter your email"
+              required
             />
             <div className="form-text">We’ll never share your email.</div>
           </div>
@@ -81,7 +106,9 @@ function SignUp(props) {
             </label>
             <input
               type="password"
-              className="form-control"
+              className={`form-control ${
+                errors.passwordMismatch ? "is-invalid" : ""
+              }`}
               id="password"
               onChange={onChange}
               name="password"
@@ -97,7 +124,9 @@ function SignUp(props) {
             </label>
             <input
               type="password"
-              className="form-control"
+              className={`form-control ${
+                errors.passwordMismatch ? "is-invalid" : ""
+              }`}
               id="cpassword"
               onChange={onChange}
               name="cpassword"
@@ -105,9 +134,15 @@ function SignUp(props) {
               minLength={5}
               placeholder="Re-enter your password"
             />
+            {errors.passwordMismatch && (
+              <div className="invalid-feedback">Passwords do not match</div>
+            )}
           </div>
 
-          <button type="submit" className="btn btn-primary w-100 py-2 fw-semibold">
+          <button
+            type="submit"
+            className="btn btn-primary w-100 py-2 fw-semibold"
+          >
             Create Account
           </button>
         </form>

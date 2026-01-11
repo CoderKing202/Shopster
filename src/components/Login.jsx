@@ -23,10 +23,9 @@ function Login(props) {
     console.log(json);
     if (json.success) {
       localStorage.setItem("token", json.authtoken);
-      props.showAlert("Logged in Successfully", "success");
       navigate("/");
     } else {
-      props.showAlert("Invalid credentials", "danger");
+      
     }
   };
 
