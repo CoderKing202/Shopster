@@ -1,104 +1,123 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { actionCreators } from "./state";
+import { bindActionCreators } from "redux";
+
 
 function NavBar() {
-  const navigate = useNavigate()
-  const collapseRef = useRef(null)
-
-  const [products, setProducts] = useState([])
-  const [query, setQuery] = useState('')
-  const [filtered, setFiltered] = useState([])
-  const [highlightedIndex, setHighlightedIndex] = useState(-1)
-
-  const handleCart = () => navigate("/loginplease")
-  const handleProfile = () => navigate("/loginplease")
+  const navigate = useNavigate();
+  const loginDispatch = useDispatch()
+  const {logStatus} = bindActionCreators(actionCreators,loginDispatch)
+  const collapseRef = useRef(null);
+  const logStat = useSelector((state) => state.logStatus);
+  const [products, setProducts] = useState([]);
+  const [query, setQuery] = useState("");
+  const [filtered, setFiltered] = useState([]);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const logOut = ()=>{
+    localStorage.removeItem("token")
+    logStatus(false)
+    navigate("/")
+  }
 
   useEffect(() => {
-    fetch('https://dummyjson.com/products?limit=100')
-      .then(res => res.json())
-      .then(data => setProducts(data.products))
-  }, [])
+    fetch("https://dummyjson.com/products?limit=100")
+      .then((res) => res.json())
+      .then((data) => setProducts(data.products));
+  }, []);
 
   // Debounced filtering
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (query.trim() === '') {
-        setFiltered([])
+      if (query.trim() === "") {
+        setFiltered([]);
       } else {
-        const q = query.toLowerCase()
+        const q = query.toLowerCase();
         setFiltered(
-          products.filter(p => p.title.toLowerCase().includes(q)).slice(0, 6)
-        )
+          products.filter((p) => p.title.toLowerCase().includes(q)).slice(0, 6)
+        );
       }
-    }, 250)
+    }, 250);
 
-    return () => clearTimeout(timeout)
-  }, [query, products])
+    return () => clearTimeout(timeout);
+  }, [query, products]);
 
   const closeMenu = () => {
-    const el = document.getElementById("navbarContent")
+    const el = document.getElementById("navbarContent");
     if (el?.classList.contains("show")) {
-      el.classList.remove("show")
+      el.classList.remove("show");
     }
-  }
+  };
 
   const handleSelect = (id) => {
-    setQuery('')
-    setFiltered([])
-    setHighlightedIndex(-1)
-    navigate(`/product/${id}`)
-    closeMenu()
-  }
+    setQuery("");
+    setFiltered([]);
+    setHighlightedIndex(-1);
+    navigate(`/product/${id}`);
+    closeMenu();
+  };
 
   const handleSearchSubmit = (e) => {
-    e.preventDefault()
-    if (!query.trim()) return
-    navigate(`/search/${encodeURIComponent(query.trim())}`)
-    setFiltered([])
-    setHighlightedIndex(-1)
-    closeMenu()
-  }
+    e.preventDefault();
+    if (!query.trim()) return;
+    navigate(`/search/${encodeURIComponent(query.trim())}`);
+    setFiltered([]);
+    setHighlightedIndex(-1);
+    closeMenu();
+  };
 
   const handleKeyDown = (e) => {
-    if (!filtered.length) return
+    if (!filtered.length) return;
 
     if (e.key === "ArrowDown") {
-      setHighlightedIndex(i => Math.min(i + 1, filtered.length - 1))
+      setHighlightedIndex((i) => Math.min(i + 1, filtered.length - 1));
     } else if (e.key === "ArrowUp") {
-      setHighlightedIndex(i => Math.max(i - 1, 0))
+      setHighlightedIndex((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter" && highlightedIndex >= 0) {
-      handleSelect(filtered[highlightedIndex].id)
+      handleSelect(filtered[highlightedIndex].id);
     }
-  }
+  };
 
   const highlightMatch = (text, query) => {
-    if (!query) return text
-    const i = text.toLowerCase().indexOf(query.toLowerCase())
-    if (i === -1) return text
+    if (!query) return text;
+    const i = text.toLowerCase().indexOf(query.toLowerCase());
+    if (i === -1) return text;
     return (
       <>
         {text.slice(0, i)}
         <strong>{text.slice(i, i + query.length)}</strong>
         {text.slice(i + query.length)}
       </>
-    )
-  }
+    );
+  };
 
   return (
     <nav className="navbar navbar-expand-lg bg-body-tertiary sticky-top">
       <div className="container-fluid">
+        <Link className="navbar-brand" to="/" onClick={closeMenu}>
+          Shopster
+        </Link>
 
-        <Link className="navbar-brand" to="/" onClick={closeMenu}>Shopster</Link>
-
-        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarContent"
+        >
           <span className="navbar-toggler-icon"></span>
         </button>
 
-        <div className="collapse navbar-collapse" id="navbarContent" ref={collapseRef}>
-
+        <div
+          className="collapse navbar-collapse"
+          id="navbarContent"
+          ref={collapseRef}
+        >
           <ul className="navbar-nav mb-2 mb-lg-0">
             <li className="nav-item">
-              <Link className="nav-link active" to="/" onClick={closeMenu}>Home</Link>
+              <Link className="nav-link active" to="/" onClick={closeMenu}>
+                Home
+              </Link>
             </li>
           </ul>
 
@@ -112,18 +131,25 @@ function NavBar() {
               type="search"
               placeholder="Search products..."
               value={query}
-              onChange={e => setQuery(e.target.value)}
+              onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
             />
-            <button className="btn btn-outline-success" type="submit">Search</button>
+            <button className="btn btn-outline-success" type="submit">
+              Search
+            </button>
 
             {filtered.length > 0 && (
-              <ul className="list-group position-absolute w-100 shadow" style={{ top: "100%", zIndex: 1000 }}>
+              <ul
+                className="list-group position-absolute w-100 shadow"
+                style={{ top: "100%", zIndex: 1000 }}
+              >
                 {filtered.map((p, i) => (
                   <li
                     key={p.id}
-                    className={`list-group-item list-group-item-action ${i === highlightedIndex ? "active" : ""}`}
-                    style={{ cursor: 'pointer' }}
+                    className={`list-group-item list-group-item-action ${
+                      i === highlightedIndex ? "active" : ""
+                    }`}
+                    style={{ cursor: "pointer" }}
                     onMouseEnter={() => setHighlightedIndex(i)}
                     onClick={() => handleSelect(p.id)}
                   >
@@ -135,19 +161,48 @@ function NavBar() {
           </form>
 
           <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-3 ms-lg-auto mt-3 mt-lg-0">
-            <Link to="/login" className="btn btn-outline-primary w-100 w-lg-auto" onClick={closeMenu}>Login</Link>
-            <Link to="/signup" className="btn btn-primary w-100 w-lg-auto" onClick={closeMenu}>Signup</Link>
-
+            {!logStat?<><Link
+              to="/login"
+              className="btn btn-outline-primary w-100 w-lg-auto"
+              onClick={closeMenu}
+            >
+              Login
+            </Link>
+            <Link
+              to="/signup"
+              className="btn btn-primary w-100 w-lg-auto"
+              onClick={closeMenu}
+            >
+              Signup
+            </Link></>:<><Link
+              to="/"
+              className="btn btn-primary w-100 w-lg-auto"
+              onClick={()=>{logOut(),closeMenu()}}
+            >
+              LogOut
+            </Link></>
+}
             <div className="d-flex gap-3">
-              <img src="https://cdn-icons-png.flaticon.com/512/263/263142.png" alt="Cart" width="28" onClick={handleCart} style={{ cursor: 'pointer' }} />
-              <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Profile" width="28" onClick={handleProfile} style={{ cursor: 'pointer' }} />
+              <Link to="/cart">
+                <img
+                  src="https://cdn-icons-png.flaticon.com/512/263/263142.png"
+                  alt="Cart"
+                  width="28"
+                />
+              </Link>
+              <Link to="/userProfile">
+                <img
+                  src="https://cdn-icons-png.flaticon.com/512/847/847969.png"
+                  alt="Profile"
+                  width="28"
+                />
+              </Link>
             </div>
           </div>
-
         </div>
       </div>
     </nav>
-  )
+  );
 }
 
-export default NavBar
+export default NavBar;

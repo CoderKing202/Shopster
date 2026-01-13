@@ -10,8 +10,8 @@ function SearchResults() {
   const [loading, setLoading] = useState(true);
   const [sortType, setSortType] = useState("");
 
-  const handleAddToCart = () => navigate("/loginplease");
-  const handleBuyNow = () => navigate("/loginplease");
+  const handleAddToCart = () =>{};
+  const handleBuyNow = () => navigate("/checkOut");
 
   useEffect(() => {
     setProducts([]);

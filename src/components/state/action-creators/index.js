@@ -1,16 +1,8 @@
 export const logStatus = (amount)=>{
     return (dispatch)=>{
         dispatch({
-            type:'logStatus',
+            type:'logChange',
             payload:amount
         })
     }
-}
-export const withDrawMoney = (amount)=>{
-        return (dispatch)=>{
-            dispatch({
-            type:"withdraw",
-            payload:amount
-            })
-        }
 }

@@ -1,12 +1,28 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { actionCreators } from "./state";
+import { bindActionCreators } from "redux";
+import { useDispatch } from "react-redux";
 
 function Login(props) {
   const navigate = useNavigate();
-  const [credentials, setCredentials] = useState({ email: "", password: "" });
+  const loginDespatch = useDispatch()
+  const [results,setResults] = useState(null)
+  const [credentials, setCredentials] = useState({
+    email: "",
+    password: "",
+  });
+  const {logStatus} = bindActionCreators(actionCreators,loginDespatch)
+
+  const [errors, setErrors] = useState({
+    invalidCredentials: false,
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Reset previous error
+    setErrors({ invalidCredentials: false });
 
     const response = await fetch("http://localhost:3000/api/auth/login", {
       method: "POST",
@@ -19,18 +35,22 @@ function Login(props) {
       }),
     });
 
-    const json = await response.json();
-    console.log(json);
-    if (json.success) {
-      localStorage.setItem("token", json.authtoken);
+    const results = await response.json();
+    setResults(results)
+    if (results.success) {
+      localStorage.setItem("token", results.authtoken);
+      logStatus(true)
       navigate("/");
     } else {
-      
+      setErrors({ invalidCredentials: true });
     }
   };
 
   const onChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
+
+    // Clear error while typing
+    setErrors({ invalidCredentials: false });
   };
 
   return (
@@ -54,7 +74,9 @@ function Login(props) {
             </label>
             <input
               type="email"
-              className="form-control"
+              className={`form-control ${
+                errors.invalidCredentials ? "is-invalid" : ""
+              }`}
               id="email"
               name="email"
               required
@@ -71,7 +93,9 @@ function Login(props) {
             </label>
             <input
               type="password"
-              className="form-control"
+              className={`form-control ${
+                errors.invalidCredentials ? "is-invalid" : ""
+              }`}
               id="exampleInputPassword1"
               required
               name="password"
@@ -79,9 +103,17 @@ function Login(props) {
               onChange={onChange}
               placeholder="Enter your password"
             />
+            {errors.invalidCredentials && (
+              <div className="invalid-feedback">
+                {results.error}
+              </div>
+            )}
           </div>
 
-          <button type="submit" className="btn btn-primary w-100 py-2 fw-semibold">
+          <button
+            type="submit"
+            className="btn btn-primary w-100 py-2 fw-semibold"
+          >
             Login
           </button>
         </form>

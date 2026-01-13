@@ -7,13 +7,14 @@ function Product() {
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
+  
 
   const handleAddToCart = () => {
-    navigate("/loginplease");
+    
   };
 
   const handleBuyNow = () => {
-    navigate("/loginplease");
+    navigate("/checkOut");
   };
 
   useEffect(() => {

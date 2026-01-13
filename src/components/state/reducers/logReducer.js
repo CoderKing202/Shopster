@@ -1,11 +1,8 @@
-const reducer = (state=0,action)=>{
-    if(action.type==="deposit")
+const reducer = (state=false,action)=>{
+    if(action.type==="logChange")
     {
         return action.payload
-    }
-    else if(action.type==="withdraw"){
-        return state - action.payload
-    }
+    } 
     else{
         return state
     }

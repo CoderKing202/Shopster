@@ -1,8 +1,14 @@
 import React, { useState } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { bindActionCreators } from "redux";
+import { actionCreators } from "./state"
 
 function SignUp(props) {
   const navigate = useNavigate();
+  const loginDispatch = useDispatch()
+  const {logStatus} = bindActionCreators(actionCreators,loginDispatch)
+  
   const [credentials, setCredentials] = useState({
     name: "",
     email: "",
@@ -10,8 +16,10 @@ function SignUp(props) {
     cpassword: "",
   });
 
+  const [results,setResults] = useState(null)
   const [errors, setErrors] = useState({
     passwordMismatch: false,
+    emailsAlreadyExists: false
   });
 
   const handleSubmit = async (e) => {
@@ -19,10 +27,10 @@ function SignUp(props) {
 
     // Check if passwords match
     if (credentials.password !== credentials.cpassword) {
-      setErrors({ passwordMismatch: true });
+      setErrors((prev)=> ({...prev,passwordMismatch: true}) );
       return; // Stop submission
     } else {
-      setErrors({ passwordMismatch: false });
+      setErrors((prev)=> ({...prev,passwordMismatch: false}) );
     }
 
     const { name, email, password } = credentials;
@@ -34,13 +42,17 @@ function SignUp(props) {
       body: JSON.stringify({ name, email, password }),
     });
 
-    const json = await response.json();
-    console.log(json);
-    if (json.success) {
-      localStorage.setItem("token", json.authtoken);
+    const results = await response.json();
+    setResults(results)
+    if (results.success) {
+      localStorage.setItem("token", results.authtoken);
+      logStatus(true)
       navigate("/");
     } else {
-      // Handle error (optional)
+      setErrors((prev)=>({
+        ...prev,
+        emailsAlreadyExists:true
+      }))
     }
   };
 
@@ -49,7 +61,7 @@ function SignUp(props) {
 
     // Reset password mismatch error on typing
     if (e.target.name === "password" || e.target.name === "cpassword") {
-      setErrors({ passwordMismatch: false });
+      setErrors((prev)=>({...prev, passwordMismatch: false }));
     }
   };
 
@@ -90,16 +102,19 @@ function SignUp(props) {
             </label>
             <input
               type="email"
-              className="form-control"
+              className={`form-control ${errors.emailsAlreadyExists?"is-invalid":""}`}
               id="email"
               onChange={onChange}
               name="email"
               placeholder="Enter your email"
               required
             />
+              {errors.emailsAlreadyExists && (
+              <div className="invalid-feedback">{results.error}</div>
+            )}
             <div className="form-text">We’ll never share your email.</div>
           </div>
-
+       
           <div className="mb-3">
             <label htmlFor="password" className="form-label fw-semibold">
               Password

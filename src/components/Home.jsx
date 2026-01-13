@@ -4,8 +4,12 @@ import Corousel from "./Corousel";
 import { useEffect } from "react";
 import axios from "axios";
 import Categories from "./Categories";
+import { useSelector } from "react-redux";
+
 
 function Home(props) {
+  const logStatus = useSelector(state=>state.logStatus)
+  
   const [slideImages,setslideImages] = useState([])
 useEffect(() => {
   const fetchProducts = async () => {

@@ -10,11 +10,11 @@ function Category({ category, setCategory }) {
   const navigate = useNavigate();
 
   const handleAddToCart = () => {
-    navigate("/loginplease");
+    
   };
 
   const handleBuyNow = () => {
-    navigate("/loginplease");
+    navigate("/checkOut");
   };
 
   useEffect(() => {
