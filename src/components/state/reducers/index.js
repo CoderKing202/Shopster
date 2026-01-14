@@ -1,8 +1,9 @@
-import {combineReducers} from "redux"
+import { combineReducers } from "redux"
 import logReducer from "./logReducer"
-
+import cartReducer from "./cartReducer"
 const reducer = combineReducers({
-    logStatus:logReducer
+    logStatus: logReducer,
+    cartItems: cartReducer
 })
 
 export default reducer

@@ -6,20 +6,23 @@ import { bindActionCreators } from "redux";
 
 
 function NavBar() {
+  const items = useSelector(state=>state.cartItems) 
   const navigate = useNavigate();
-  const loginDispatch = useDispatch()
-  const {logStatus} = bindActionCreators(actionCreators,loginDispatch)
+  const loginDispatch = useDispatch();
+  const { logStatus } = bindActionCreators(actionCreators, loginDispatch);
   const collapseRef = useRef(null);
   const logStat = useSelector((state) => state.logStatus);
+
   const [products, setProducts] = useState([]);
   const [query, setQuery] = useState("");
   const [filtered, setFiltered] = useState([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const logOut = ()=>{
-    localStorage.removeItem("token")
-    logStatus(false)
-    navigate("/")
-  }
+
+  const logOut = () => {
+    localStorage.removeItem("token");
+    logStatus(false);
+    navigate("/");
+  };
 
   useEffect(() => {
     fetch("https://dummyjson.com/products?limit=100")
@@ -27,7 +30,6 @@ function NavBar() {
       .then((data) => setProducts(data.products));
   }, []);
 
-  // Debounced filtering
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (query.trim() === "") {
@@ -161,35 +163,52 @@ function NavBar() {
           </form>
 
           <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-3 ms-lg-auto mt-3 mt-lg-0">
-            {!logStat?<><Link
-              to="/login"
-              className="btn btn-outline-primary w-100 w-lg-auto"
-              onClick={closeMenu}
-            >
-              Login
-            </Link>
-            <Link
-              to="/signup"
-              className="btn btn-primary w-100 w-lg-auto"
-              onClick={closeMenu}
-            >
-              Signup
-            </Link></>:<><Link
-              to="/"
-              className="btn btn-primary w-100 w-lg-auto"
-              onClick={()=>{logOut(),closeMenu()}}
-            >
-              LogOut
-            </Link></>
-}
+            {!logStat ? (
+              <>
+                <Link
+                  to="/login"
+                  className="btn btn-outline-primary w-100 w-lg-auto"
+                  onClick={closeMenu}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="btn btn-primary w-100 w-lg-auto"
+                  onClick={closeMenu}
+                >
+                  Signup
+                </Link>
+              </>
+            ) : (
+              <Link
+                to="/"
+                className="btn btn-primary w-100 w-lg-auto"
+                onClick={() => {
+                  logOut();
+                  closeMenu();
+                }}
+              >
+                LogOut
+              </Link>
+            )}
+
             <div className="d-flex gap-3">
-              <Link to="/cart">
+              {/* Cart with badge */}
+              <Link to="/cart" className="position-relative">
                 <img
                   src="https://cdn-icons-png.flaticon.com/512/263/263142.png"
                   alt="Cart"
                   width="28"
                 />
+                <span
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  style={{ fontSize: "0.65rem" }}
+                >
+                  {items.length}
+                </span>
               </Link>
+
               <Link to="/userProfile">
                 <img
                   src="https://cdn-icons-png.flaticon.com/512/847/847969.png"

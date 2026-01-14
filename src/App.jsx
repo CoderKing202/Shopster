@@ -24,6 +24,7 @@ function App() {
   const [count, setCount] = useState(0);
   const [category,setCategory]=useState("Smartphones")  
   const token = localStorage.getItem("token")
+  
   useEffect(()=>{
     if(token){
       logStatus(true)
