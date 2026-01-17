@@ -6,6 +6,7 @@ import { bindActionCreators } from "redux";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 
+
 function Category({ category, addToCart,removeCartItem }) {
   
   const itemDispatch = useDispatch();
@@ -26,6 +27,9 @@ function Category({ category, addToCart,removeCartItem }) {
   const handleAddToCart = (e, item) => {
     e.preventDefault();
     if (logStatus) {
+      item["quantity"] = 1
+      console.log("item1")
+      console.log(item)
       addToCart(item)
       addItem(item);
     } else {
@@ -35,8 +39,9 @@ function Category({ category, addToCart,removeCartItem }) {
   const handleRemoveFromCart = (e, item) => {
     e.preventDefault();
     removeCartItem(item)
-    removeItem(item);
+    removeItem(item)
   };
+
   const handleBuyNow = () => {
     navigate("/checkOut");
   };

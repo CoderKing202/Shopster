@@ -51,7 +51,7 @@ function App() {
         body:JSON.stringify(product)
       })
     }
-    const  removeCartItem = async (product)=>{
+    const removeCartItem = async (product)=>{
       const response = await fetch("http://localhost:3000/api/auth/removeCartItem",{
         method:"POST",
         headers:{
@@ -60,6 +60,7 @@ function App() {
         },
         body:JSON.stringify(product)
       })
+      
     }
   useEffect(() => {
     if (token) {
@@ -83,7 +84,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/product/:id" element={<Product />} />
             <Route path="/search/:query" element={<SearchResults  addToCart={addToCart} removeCartItem={removeCartItem}/>} />
-            <Route path="/cart" element={<Cart />} />
+            <Route path="/cart" element={<Cart removeCartItem = {removeCartItem}/>} />
             <Route path="/checkOut" element={<Checkout />} />
             <Route path="/userProfile" element={<UserProfile />} />
           </Routes>

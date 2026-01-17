@@ -1,10 +1,19 @@
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { removeItem } from "./state/action-creators";
+import { useDispatch } from "react-redux";
+import { actionCreators } from "./state";
+import { bindActionCreators } from "redux";
+import { Link } from "react-router-dom";
 
-function Cart() {
+
+function Cart({removeCartItem}) {
   const navigate = useNavigate();
   const cartItems = useSelector((state) => state.cartItems);
+  const dispatcher = useDispatch()
+  const {removeItem} = bindActionCreators(actionCreators,dispatcher)
+  
 
   useEffect(() => {
     if (!localStorage.getItem("token")) {
@@ -13,12 +22,14 @@ function Cart() {
   }, [navigate]);
 
   const handleBuyNow = (id) => {
-    navigate(`/checkout?product=${id}`);
+    
+    navigate(`/checkOut`);
   };
-
-  const handleRemove = (id) => {
+  
+  const handleRemove = (item) => {
     // Hook this to redux + backend later
-    console.log("Remove item:", id);
+    removeCartItem(item)
+    removeItem(item)
   };
 
   return (
@@ -30,11 +41,15 @@ function Cart() {
           <p>Your cart is empty.</p>
         ) : (
           <>
+          
             {cartItems.map((item) => (
+              <>
+              
               <div
                 key={item.id}
                 className="card mb-3 shadow-sm"
-                style={{ width: "100%" }}
+                style={{ width: "100%",cursor:"pointer" }}
+                onClick={()=>{navigate(`/product/${item.id}`)}}
               >
                 <div className="row g-0 align-items-center">
                   {/* LEFT COLUMN - IMAGE */}
@@ -52,7 +67,7 @@ function Cart() {
                     <div className="card-body">
                       <h5 className="card-title">{item.title}</h5>
                       <p className="card-text text-muted">
-                        Price: ₹{item.price}
+                        Price: ₹{ item.price }
                       </p>
 
                       {/* QUANTITY COUNTER */}
@@ -72,14 +87,14 @@ function Cart() {
                       <div className="d-flex gap-3 mt-4">
                         <button
                           className="btn btn-danger"
-                          onClick={() => handleRemove(item.id)}
+                          onClick={(e) => {e.stopPropagation(),handleRemove(item)}}
                         >
                           Remove
                         </button>
 
                         <button
                           className="btn btn-primary"
-                          onClick={() => handleBuyNow(item.id)}
+                          onClick={() => {e.stopPropagation(),handleBuyNow(item.id)}}
                         >
                           Buy Now
                         </button>
@@ -88,6 +103,8 @@ function Cart() {
                   </div>
                 </div>
               </div>
+              
+              </>
             ))}
 
             {/* CHECKOUT BUTTON */}
