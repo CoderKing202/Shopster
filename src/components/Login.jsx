@@ -6,13 +6,32 @@ import { useDispatch } from "react-redux";
 
 function Login(props) {
   const navigate = useNavigate();
-  const loginDespatch = useDispatch()
+  const dispatcher = useDispatch()
+  const {logStatus,addUserCart} = bindActionCreators(actionCreators,dispatcher)
+  
+  const getCartItems = async () => {
+    const token = localStorage.getItem("token")
+    console.log(token)
+    const response = await fetch("http://localhost:3000/api/auth/getCartItems", {
+      method:"GET",
+      headers:{
+        "auth-token":token
+      }
+    });
+    const result = await response.json()
+    if(result.success){
+      addUserCart(result.cartItems)
+      console.log(result.cartItems)
+    }    
+    
+  };
+  
   const [results,setResults] = useState(null)
   const [credentials, setCredentials] = useState({
     email: "",
     password: "",
   });
-  const {logStatus} = bindActionCreators(actionCreators,loginDespatch)
+
 
   const [errors, setErrors] = useState({
     invalidCredentials: false,
@@ -40,6 +59,7 @@ function Login(props) {
     if (results.success) {
       localStorage.setItem("token", results.authtoken);
       logStatus(true)
+      getCartItems()
       navigate("/");
     } else {
       setErrors({ invalidCredentials: true });

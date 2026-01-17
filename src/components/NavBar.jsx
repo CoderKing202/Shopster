@@ -8,8 +8,8 @@ import { bindActionCreators } from "redux";
 function NavBar() {
   const items = useSelector(state=>state.cartItems) 
   const navigate = useNavigate();
-  const loginDispatch = useDispatch();
-  const { logStatus } = bindActionCreators(actionCreators, loginDispatch);
+  const dispatcher = useDispatch();
+  const { logStatus, addUserCart } = bindActionCreators(actionCreators, dispatcher);
   const collapseRef = useRef(null);
   const logStat = useSelector((state) => state.logStatus);
 
@@ -22,6 +22,7 @@ function NavBar() {
     localStorage.removeItem("token");
     logStatus(false);
     navigate("/");
+    addUserCart([])
   };
 
   useEffect(() => {

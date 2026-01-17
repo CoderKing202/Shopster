@@ -19,37 +19,77 @@ import { actionCreators } from "./components/state";
 import { bindActionCreators } from "redux";
 
 function App() {
-  const loginDispatch = useDispatch()
-  const {logStatus} = bindActionCreators(actionCreators, loginDispatch)
+  const dispatcher = useDispatch();
+  const { logStatus,addUserCart } = bindActionCreators(actionCreators, dispatcher);
   const [count, setCount] = useState(0);
-  const [category,setCategory]=useState("Smartphones")  
-  const token = localStorage.getItem("token")
-  
-  useEffect(()=>{
-    if(token){
-      logStatus(true)
+  const [category, setCategory] = useState("Smartphones");
+  const token = localStorage.getItem("token");
+  const getCartItems = async () => {
+    console.log(token)
+    const response = await fetch("http://localhost:3000/api/auth/getCartItems", {
+      method:"GET",
+      headers:{
+        "auth-token":token
+      }
+    });
+    const result = await response.json()
+    if(result.success){
+      addUserCart(result.cartItems)
+      console.log(result.cartItems)
+    }    
+    
+  };
+   const addToCart = async (product)=>{
+        console.log(token)
+
+      const response = await fetch("http://localhost:3000/api/auth/addCartItem",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "auth-token":token
+        },
+        body:JSON.stringify(product)
+      })
     }
-  })
+    const  removeCartItem = async (product)=>{
+      const response = await fetch("http://localhost:3000/api/auth/removeCartItem",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "auth-token":token
+        },
+        body:JSON.stringify(product)
+      })
+    }
+  useEffect(() => {
+    if (token) {
+      logStatus(true);
+      getCartItems()
+    }
+  });
   return (
     <>
-    <Router>
-      <NavBar />
-      <div>
-        <Routes>
-            <Route path='/' element={<Home />}/> 
-            <Route path='/category/:categoryName' element={<Category category={category} />}/> 
-            <Route path='/loginplease' element={<LoginPrompt/>}/> 
-            <Route path='/signUp' element={<SignUp/>}/> 
-            <Route path='/login' element={<Login/>}/> 
-            <Route path='/product/:id' element={<Product/>}/> 
-            <Route path="/search/:query" element={<SearchResults/>} />
-            <Route path="/cart" element={<Cart/>} />
-            <Route path="/checkOut" element={<Checkout/>} />
-            <Route path="/userProfile" element={<UserProfile/>} />
-        </Routes>
-      </div>
-    </Router>
-    <br />
+      <Router>
+        <NavBar />
+        <div>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route
+              path="/category/:categoryName"
+              element={<Category category={category} addToCart={addToCart} removeCartItem={removeCartItem}/>}
+            />
+            <Route path="/loginplease" element={<LoginPrompt />} />
+            <Route path="/signUp" element={<SignUp />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/product/:id" element={<Product />} />
+            <Route path="/search/:query" element={<SearchResults  addToCart={addToCart} removeCartItem={removeCartItem}/>} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkOut" element={<Checkout />} />
+            <Route path="/userProfile" element={<UserProfile />} />
+          </Routes>
+        </div>
+      </Router>
+      <br />
     </>
   );
 }

@@ -6,9 +6,22 @@ import { actionCreators } from "./state"
 
 function SignUp(props) {
   const navigate = useNavigate();
-  const loginDispatch = useDispatch()
-  const {logStatus} = bindActionCreators(actionCreators,loginDispatch)
-  
+  const dispatcher = useDispatch()
+  const {logStatus,addUserCart} = bindActionCreators(actionCreators,dispatcher)
+    const getCartItems = async () => {
+    const response = await fetch("http://localhost:3000/api/auth/getCartItems", {
+      method:"GET",
+      headers:{
+        "auth-token":token
+      }
+    });
+    const result = await response.json()
+    if(result.success){
+      addUserCart(result.cartItems)
+      console.log(result.cartItems)
+    }    
+    
+  };
   const [credentials, setCredentials] = useState({
     name: "",
     email: "",
@@ -47,6 +60,7 @@ function SignUp(props) {
     if (results.success) {
       localStorage.setItem("token", results.authtoken);
       logStatus(true)
+      getCartItems()
       navigate("/");
     } else {
       setErrors((prev)=>({

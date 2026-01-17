@@ -8,8 +8,10 @@ import { useSelector } from "react-redux";
 
 
 function Home(props) {
+
   const logStatus = useSelector(state=>state.logStatus)
-  
+  const item = useSelector(state=>state.item)
+  console.log(logStatus)
   const [slideImages,setslideImages] = useState([])
 useEffect(() => {
   const fetchProducts = async () => {
@@ -29,8 +31,6 @@ useEffect(() => {
 
   fetchProducts();
 }, []);
-
-console.log(slideImages)
   return (
     <div className="bg-light">
       <div className="container py-2">

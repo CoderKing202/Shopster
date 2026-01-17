@@ -6,7 +6,7 @@ function Checkout() {
   const logStatus = useSelector((state)=>state.logStatus)
   const navigate = useNavigate()
    useEffect(() => {
-     if (!logStatus) {
+     if (localStorage.getItem("token")) {
        navigate("/loginplease");
      }
    },[]);

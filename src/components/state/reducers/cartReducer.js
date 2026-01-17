@@ -7,6 +7,9 @@ const reducer = (state = [], action) => {
             return (product.id !== action.payload.id)
         })
     }
+    else if(action.type === "userCartItems"){
+            return [...action.payload]
+    }
     else {
         return state
     }

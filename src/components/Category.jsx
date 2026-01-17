@@ -6,27 +6,37 @@ import { bindActionCreators } from "redux";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 
-
-function Category({ category, setCategory }) {
-  const itemDispatch = useDispatch()
-  const {addItem,removeItem} = bindActionCreators(actionCreators,itemDispatch)
-
-  const items = useSelector(state => state.cartItems)
-  console.log(items)
+function Category({ category, addToCart,removeCartItem }) {
+  
+  const itemDispatch = useDispatch();
+  const logStatus = useSelector((state) => state.logStatus);
+  const { addItem, removeItem } = bindActionCreators(
+    actionCreators,
+    itemDispatch
+  );
+  const token = localStorage.getItem("token");
+  const items = useSelector((state) => state.cartItems);
+  console.log(logStatus);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { categoryName } = useParams();
   const [sortType, setSortType] = useState("");
   const navigate = useNavigate();
-
+  
   const handleAddToCart = (e, item) => {
-    e.preventDefault()
-    addItem(item)
+    e.preventDefault();
+    if (logStatus) {
+      addToCart(item)
+      addItem(item);
+    } else {
+      navigate("/loginplease");
+    }
   };
-  const handleRemoveFromCart=(e, item)=>{
-    e.preventDefault()
-    removeItem(item)
-  }
+  const handleRemoveFromCart = (e, item) => {
+    e.preventDefault();
+    removeCartItem(item)
+    removeItem(item);
+  };
   const handleBuyNow = () => {
     navigate("/checkOut");
   };
@@ -116,31 +126,37 @@ function Category({ category, setCategory }) {
                             ${product.price}
                           </p>
                           <div className="d-flex justify-content-between mt-auto">
-                          {(items.filter((item) => {
-                            return (item.id === product.id)
-                          }).length === 0) ?
-                            
+                            {items.filter((item) => {
+                              return item.id === product.id;
+                            }).length === 0 ? (
                               <button
                                 className="btn btn-sm btn-primary"
-                                onClick={(e) => { handleAddToCart(e, product) }}
-                              >
-                                Add to Cart
-                              </button>:<button
-                                className="btn btn-sm btn-danger"
-                                onClick={(e) => { handleRemoveFromCart(e, product) }}
-                              >
-                                Remove from Cart
-                              </button>}
-                              <button
-                                className="btn btn-sm btn-success"
                                 onClick={(e) => {
-                                  e.preventDefault();
-                                  handleBuyNow();
+                                  handleAddToCart(e, product);
                                 }}
                               >
-                                Buy Now
+                                Add to Cart
                               </button>
-                            </div>
+                            ) : (
+                              <button
+                                className="btn btn-sm btn-danger"
+                                onClick={(e) => {
+                                  handleRemoveFromCart(e, product);
+                                }}
+                              >
+                                Remove from Cart
+                              </button>
+                            )}
+                            <button
+                              className="btn btn-sm btn-success"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleBuyNow();
+                              }}
+                            >
+                              Buy Now
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </Link>
@@ -151,7 +167,6 @@ function Category({ category, setCategory }) {
           </div>
         </div>
       </div>
-
     </>
   );
 }
