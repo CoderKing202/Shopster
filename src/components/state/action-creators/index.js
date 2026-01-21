@@ -31,3 +31,22 @@ export const addUserCart = (items) => {
     });
   };
 };
+export const incrementProductQuantity =(item)=>{
+  return((dispatch)=>{
+    dispatch({
+      type:"incrementQuantity",
+      payload:item
+    })
+  }
+  )
+
+}
+export const decrementProductQuantity =(item)=>{
+  return((dispatch)=>{
+    dispatch({
+      type:"decrementQuantity",
+      payload:item
+    })
+    }
+  )
+}

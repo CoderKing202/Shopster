@@ -1,79 +1,148 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 function UserProfile() {
   const navigate = useNavigate();
-  const logStatus = useSelector((state) => state.logStatus);
+  const token = localStorage.getItem("token");
 
   const initialUser = {
-    fullName: "Jatin Sharma",
-    email: "jatin@example.com",
+    name: "",
+    email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   };
 
   const [user, setUser] = useState(initialUser);
+  const [savedUser, setSavedUser] = useState(initialUser);
   const [editable, setEditable] = useState({
-    fullName: false,
+    name: false,
     email: false,
-    password: false,
-    confirmPassword: false
   });
+  const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  /* ---------------- GET USER DETAILS ---------------- */
+  const getUserDetails = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/auth/getuser",
+        {
+          method: "GET",
+          headers: {
+            "auth-token": token,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.name || data.email) {
+        const cleanUser = {
+          name: data.name,
+          email: data.email,
+          password: "",
+          confirmPassword: "",
+        };
+        setUser(cleanUser);
+        setSavedUser(cleanUser);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
-    if (!localStorage.getItem("token")) {
+    if (!token) {
       navigate("/loginplease");
+    } else {
+      getUserDetails();
     }
-  }, [navigate]);
+  }, [navigate, token]);
 
+  /* ---------------- EDIT TOGGLE ---------------- */
   const toggleEdit = (field) => {
     setEditable((prev) => {
       const next = { ...prev, [field]: !prev[field] };
 
-      // If cancelling edit
+      // Cancel edit → restore saved value
       if (prev[field]) {
-        if (field === "password" || field === "confirmPassword") {
-          setUser((u) => ({ ...u, password: "", confirmPassword: "" }));
-        } else {
-          setUser((u) => ({ ...u, [field]: initialUser[field] }));
-        }
-        setError("");
+        setUser((u) => ({ ...u, [field]: savedUser[field] }));
       }
 
       return next;
     });
   };
 
+  /* ---------------- PASSWORD TOGGLE ---------------- */
+  const togglePasswordChange = () => {
+    if (showPasswordFields) {
+      setUser((u) => ({ ...u, password: "", confirmPassword: "" }));
+      setError("");
+    }
+    setShowPasswordFields(!showPasswordFields);
+  };
+
+  /* ---------------- INPUT CHANGE ---------------- */
   const handleChange = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
 
-  const handleUpdate = () => {
-    if (
-      (editable.password || editable.confirmPassword) &&
-      user.password !== user.confirmPassword
-    ) {
+  /* ---------------- UPDATE PROFILE ---------------- */
+  const handleUpdate = async () => {
+    if (showPasswordFields && user.password !== user.confirmPassword) {
       setError("Password and Confirm Password do not match");
       return;
     }
 
     setError("");
 
-    // 🔗 API / Redux update goes here
-    console.log("Updated User:", user);
+    const payload = {};
+    if (editable.name) payload.name = user.name;
+    if (editable.email) payload.email = user.email;
+    if (showPasswordFields && user.password) payload.password = user.password;
 
-    // Lock everything again
-    setEditable({
-      fullName: false,
-      email: false,
-      password: false,
-      confirmPassword: false
-    });
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/auth/updateProfile",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": token,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Save updated values as new baseline
+        const updatedUser = {
+          name: user.name,
+          email: user.email,
+          password: "",
+          confirmPassword: "",
+        };
+
+        setSavedUser(updatedUser);
+        setUser(updatedUser);
+        setEditable({ name: false, email: false });
+        setShowPasswordFields(false);
+
+        setSuccess("Profile updated successfully");
+
+        // Auto-hide success message
+        setTimeout(() => setSuccess(""), 3000);
+      } else {
+        setError(result.msg || "Update failed");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong");
+    }
   };
-
-  const getButtonText = (field) => (editable[field] ? "Cancel" : "Edit");
 
   return (
     <div className="container d-flex justify-content-center mt-5">
@@ -87,18 +156,20 @@ function UserProfile() {
             <input
               type="text"
               className="form-control"
-              name="fullName"
-              value={user.fullName}
-              disabled={!editable.fullName}
+              name="name"
+              value={user.name}
+              disabled={!editable.name}
               onChange={handleChange}
             />
             <button
               className={`btn ${
-                editable.fullName ? "btn-outline-danger" : "btn-outline-secondary"
+                editable.name
+                  ? "btn-outline-danger"
+                  : "btn-outline-secondary"
               }`}
-              onClick={() => toggleEdit("fullName")}
+              onClick={() => toggleEdit("name")}
             >
-              {getButtonText("fullName")}
+              {editable.name ? "Cancel" : "Edit"}
             </button>
           </div>
         </div>
@@ -121,62 +192,47 @@ function UserProfile() {
               }`}
               onClick={() => toggleEdit("email")}
             >
-              {getButtonText("email")}
+              {editable.email ? "Cancel" : "Edit"}
             </button>
           </div>
         </div>
 
-        {/* PASSWORD */}
+        {/* CHANGE PASSWORD */}
         <div className="mb-3">
-          <label className="form-label">Password</label>
-          <div className="input-group">
+          <button
+            className={`btn ${
+              showPasswordFields ? "btn-outline-danger" : "btn-outline-primary"
+            }`}
+            onClick={togglePasswordChange}
+          >
+            {showPasswordFields ? "Cancel" : "Change Password"}
+          </button>
+        </div>
+
+        {/* PASSWORD FIELDS */}
+        {showPasswordFields && (
+          <div className="mb-3">
             <input
               type="password"
-              className="form-control"
+              className="form-control mb-2"
               name="password"
+              placeholder="New Password"
               value={user.password}
-              disabled={!editable.password}
               onChange={handleChange}
             />
-            <button
-              className={`btn ${
-                editable.password
-                  ? "btn-outline-danger"
-                  : "btn-outline-secondary"
-              }`}
-              onClick={() => toggleEdit("password")}
-            >
-              {getButtonText("password")}
-            </button>
-          </div>
-        </div>
-
-        {/* CONFIRM PASSWORD */}
-        <div className="mb-3">
-          <label className="form-label">Confirm Password</label>
-          <div className="input-group">
             <input
               type="password"
               className="form-control"
               name="confirmPassword"
+              placeholder="Confirm Password"
               value={user.confirmPassword}
-              disabled={!editable.confirmPassword}
               onChange={handleChange}
             />
-            <button
-              className={`btn ${
-                editable.confirmPassword
-                  ? "btn-outline-danger"
-                  : "btn-outline-secondary"
-              }`}
-              onClick={() => toggleEdit("confirmPassword")}
-            >
-              {getButtonText("confirmPassword")}
-            </button>
           </div>
-        </div>
+        )}
 
         {error && <div className="alert alert-danger mt-3">{error}</div>}
+        {success && <div className="alert alert-success mt-3">{success}</div>}
 
         <div className="d-grid mt-4">
           <button className="btn btn-primary btn-lg" onClick={handleUpdate}>

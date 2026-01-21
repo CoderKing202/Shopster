@@ -10,6 +10,18 @@ const reducer = (state = [], action) => {
     else if(action.type === "userCartItems"){
             return [...action.payload]
     }
+    else if(action.type === "incrementQuantity"){
+        return state.map(
+            (product)=>{
+                return (product.id === action.payload.id)?{...product,quantity:product.quantity + 1}:product
+            }
+        )   
+    }
+    else if(action.type === "decrementQuantity"){
+        return state.map((product)=>{  
+            return (product.id === action.payload.id)?{...product,quantity:action.payload.quantity - 1}:product
+        })
+    }
     else {
         return state
     }

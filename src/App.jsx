@@ -3,7 +3,7 @@ import "./App.css";
 import Home from "./components/Home";
 import NavBar from "./components/NavBar";
 import Category from "./components/Category";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import Categories from "./components/Categories";
 import LoginPrompt from "./components/LoginPrompt";
 import SignUp from "./components/SignUp";
