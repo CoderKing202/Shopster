@@ -9,7 +9,6 @@ import { Link } from "react-router-dom";
 
 function Cart({ removeCartItem }) {
   const navigate = useNavigate();
-  
   const cartItems = useSelector((state) => state.cartItems);
   const dispatcher = useDispatch();
   const token = localStorage.getItem("token");
@@ -33,6 +32,10 @@ function Cart({ removeCartItem }) {
       incrementProductQuantity(product);
     }
   };
+
+  const handleCheckout = ()=>{
+    localStorage.setItem("buyProducts",JSON.stringify(cartItems))
+  }
   const decrementQuantity = async (product) => {
   
     const response = await fetch(
@@ -71,8 +74,9 @@ function Cart({ removeCartItem }) {
     }
   }, [navigate]);
 
-  const handleBuyNow = (id) => {
-    navigate(`/checkOut`);
+  const handleBuyNow = (item) => {
+    localStorage.setItem("buyProducts",JSON.stringify([item]))
+    navigate(`/checkOut`)
   };
 
   const handleRemove = (item) => {
@@ -80,7 +84,7 @@ function Cart({ removeCartItem }) {
     removeCartItem(item);
     removeItem(item);
   };
-
+   
   return (
     <div className="container-fluid d-flex justify-content-center mt-4">
       <div style={{ width: "90%" }}>
@@ -154,8 +158,8 @@ function Cart({ removeCartItem }) {
 
                           <button
                             className="btn btn-primary"
-                            onClick={() => {
-                              (e.stopPropagation(), handleBuyNow(item.id));
+                            onClick={(e) => {
+                              (e.stopPropagation(), handleBuyNow(item));
                             }}
                           >
                             Buy Now
@@ -171,7 +175,7 @@ function Cart({ removeCartItem }) {
             <div className="d-flex justify-content-end mt-4">
               <button
                 className="btn btn-primary btn-lg px-5"
-                onClick={() => navigate("/checkout")}
+                onClick={() => {navigate("/checkout"),handleCheckout()}}
               >
                 Checkout
               </button>

@@ -42,8 +42,11 @@ function Category({ category, addToCart,removeCartItem }) {
     removeItem(item)
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = (product) => {
+    product.quantity=1
+    localStorage.setItem("buyProducts",JSON.stringify([product]))
     navigate("/checkOut");
+  
   };
 
   useEffect(() => {
@@ -156,7 +159,7 @@ function Category({ category, addToCart,removeCartItem }) {
                               className="btn btn-sm btn-success"
                               onClick={(e) => {
                                 e.preventDefault();
-                                handleBuyNow();
+                                handleBuyNow(product);
                               }}
                             >
                               Buy Now

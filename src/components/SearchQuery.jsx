@@ -11,7 +11,12 @@ function SearchResults() {
   const [sortType, setSortType] = useState("");
 
   const handleAddToCart = () =>{};
-  const handleBuyNow = () => navigate("/checkOut");
+   const handleBuyNow = (product) => {
+    product.quantity=1
+    localStorage.setItem("buyProducts",JSON.stringify([product]))
+    navigate("/checkOut");
+  
+  };
 
   useEffect(() => {
     setProducts([]);
@@ -131,7 +136,7 @@ function SearchResults() {
                             className="btn btn-sm btn-success"
                             onClick={(e) => {
                               e.preventDefault();
-                              handleBuyNow();
+                              handleBuyNow(product);
                             }}
                           >
                             Buy Now
