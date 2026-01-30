@@ -2,80 +2,143 @@ import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { bindActionCreators } from "redux";
-import { actionCreators } from "./state"
+import { actionCreators } from "./state";
+import { Link } from "react-router-dom";
 
-function SignUp(props) {
+const countries = [
+  { name: "India", code: "+91" },
+  { name: "United States", code: "+1" },
+  { name: "United Kingdom", code: "+44" },
+  { name: "Australia", code: "+61" },
+];
+
+function SignUp() {
   const navigate = useNavigate();
-  const dispatcher = useDispatch()
-  const {logStatus,addUserCart} = bindActionCreators(actionCreators,dispatcher)
-    const getCartItems = async () => {
-    const response = await fetch("http://localhost:3000/api/auth/getCartItems", {
-      method:"GET",
-      headers:{
-        "auth-token":token
+  const dispatch = useDispatch();
+  const { logStatus, addUserCart } = bindActionCreators(
+    actionCreators,
+    dispatch
+  );
+
+  const getCartItems = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const response = await fetch(
+      "http://localhost:3000/api/auth/getCartItems",
+      {
+        method: "GET",
+        headers: {
+          "auth-token": token,
+        },
       }
-    });
-    const result = await response.json()
-    if(result.success){
-      addUserCart(result.cartItems)
-      console.log(result.cartItems)
-    }    
-    
+    );
+    const result = await response.json();
+    if (result.success) {
+      addUserCart(result.cartItems);
+    }
   };
+
   const [credentials, setCredentials] = useState({
     name: "",
     email: "",
     password: "",
     cpassword: "",
+    countryCode: "+91",
+    phone: "",
   });
 
-  const [results,setResults] = useState(null)
+  const [results, setResults] = useState(null);
+
   const [errors, setErrors] = useState({
     passwordMismatch: false,
-    emailsAlreadyExists: false
+    emailsAlreadyExists: false,
+    phoneAlreadyExists: false,
+    invalidPhone: false,
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if passwords match
+    // Reset duplicate errors
+    setErrors((prev) => ({
+      ...prev,
+      emailsAlreadyExists: false,
+      phoneAlreadyExists: false,
+    }));
+
+    // Password validation
     if (credentials.password !== credentials.cpassword) {
-      setErrors((prev)=> ({...prev,passwordMismatch: true}) );
-      return; // Stop submission
-    } else {
-      setErrors((prev)=> ({...prev,passwordMismatch: false}) );
+      setErrors((prev) => ({ ...prev, passwordMismatch: true }));
+      return;
     }
 
-    const { name, email, password } = credentials;
-    const response = await fetch("http://localhost:3000/api/auth/createuser", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name, email, password }),
-    });
+    // Phone validation (digits only, 6–15 length)
+    if (!/^\d{6,15}$/.test(credentials.phone)) {
+      setErrors((prev) => ({ ...prev, invalidPhone: true }));
+      return;
+    }
 
-    const results = await response.json();
-    setResults(results)
-    if (results.success) {
-      localStorage.setItem("token", results.authtoken);
-      logStatus(true)
-      getCartItems()
+    const { name, email, password, phone, countryCode } = credentials;
+    const fullPhoneNumber = `${countryCode}${phone}`;
+
+    const response = await fetch(
+      "http://localhost:3000/api/auth/createuser",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          phoneNumber: fullPhoneNumber,
+        }),
+      }
+    );
+
+    const data = await response.json();
+    setResults(data);
+
+    if (data.success) {
+      localStorage.setItem("token", data.authtoken);
+      logStatus(true);
+      getCartItems();
       navigate("/");
     } else {
-      setErrors((prev)=>({
+      setErrors((prev) => ({
         ...prev,
-        emailsAlreadyExists:true
-      }))
+        emailsAlreadyExists:
+          data.error?.toLowerCase().includes("email"),
+        phoneAlreadyExists:
+          data.error?.toLowerCase().includes("phone"),
+      }));
     }
   };
 
   const onChange = (e) => {
-    setCredentials({ ...credentials, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
 
-    // Reset password mismatch error on typing
-    if (e.target.name === "password" || e.target.name === "cpassword") {
-      setErrors((prev)=>({...prev, passwordMismatch: false }));
+    // Allow only digits in phone field
+    if (name === "phone" && !/^\d*$/.test(value)) return;
+
+    setCredentials({ ...credentials, [name]: value });
+
+    if (name === "password" || name === "cpassword") {
+      setErrors((prev) => ({ ...prev, passwordMismatch: false }));
+    }
+
+    if (name === "email") {
+      setErrors((prev) => ({ ...prev, emailsAlreadyExists: false }));
+    }
+
+    if (name === "phone") {
+      setErrors((prev) => ({
+        ...prev,
+        invalidPhone: false,
+        phoneAlreadyExists: false,
+      }));
     }
   };
 
@@ -94,77 +157,121 @@ function SignUp(props) {
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* NAME */}
           <div className="mb-3">
-            <label htmlFor="name" className="form-label fw-semibold">
-              Full Name
-            </label>
+            <label className="form-label fw-semibold">Full Name</label>
             <input
               type="text"
               className="form-control"
-              id="name"
-              onChange={onChange}
               name="name"
+              onChange={onChange}
               placeholder="Enter your full name"
               required
               minLength={5}
             />
           </div>
 
+          {/* EMAIL */}
           <div className="mb-3">
-            <label htmlFor="email" className="form-label fw-semibold">
-              Email Address
-            </label>
+            <label className="form-label fw-semibold">Email Address</label>
             <input
               type="email"
-              className={`form-control ${errors.emailsAlreadyExists?"is-invalid":""}`}
-              id="email"
-              onChange={onChange}
+              className={`form-control ${
+                errors.emailsAlreadyExists ? "is-invalid" : ""
+              }`}
               name="email"
+              onChange={onChange}
               placeholder="Enter your email"
               required
             />
-              {errors.emailsAlreadyExists && (
-              <div className="invalid-feedback">{results.error}</div>
+            {errors.emailsAlreadyExists && (
+              <div className="invalid-feedback">
+                This email is already registered
+              </div>
             )}
             <div className="form-text">We’ll never share your email.</div>
           </div>
-       
+
+          {/* PHONE */}
           <div className="mb-3">
-            <label htmlFor="password" className="form-label fw-semibold">
-              Password
-            </label>
+            <label className="form-label fw-semibold">Phone Number</label>
+            <div className="d-flex gap-2">
+              <select
+                className="form-select"
+                style={{ maxWidth: "120px" }}
+                name="countryCode"
+                value={credentials.countryCode}
+                onChange={onChange}
+              >
+                {countries.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.name} ({c.code})
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="tel"
+                className={`form-control ${
+                  errors.invalidPhone || errors.phoneAlreadyExists
+                    ? "is-invalid"
+                    : ""
+                }`}
+                name="phone"
+                value={credentials.phone}
+                onChange={onChange}
+                placeholder="Phone number"
+                required
+              />
+            </div>
+
+            {errors.invalidPhone && (
+              <div className="invalid-feedback d-block">
+                Please enter a valid phone number (digits only)
+              </div>
+            )}
+
+            {errors.phoneAlreadyExists && (
+              <div className="invalid-feedback d-block">
+                This phone number is already registered
+              </div>
+            )}
+          </div>
+
+          {/* PASSWORD */}
+          <div className="mb-3">
+            <label className="form-label fw-semibold">Password</label>
             <input
               type="password"
               className={`form-control ${
                 errors.passwordMismatch ? "is-invalid" : ""
               }`}
-              id="password"
-              onChange={onChange}
               name="password"
+              onChange={onChange}
               required
               minLength={5}
               placeholder="Create a password"
             />
           </div>
 
+          {/* CONFIRM PASSWORD */}
           <div className="mb-3">
-            <label htmlFor="cpassword" className="form-label fw-semibold">
-              Confirm Password
-            </label>
+            <label className="form-label fw-semibold">Confirm Password</label>
             <input
               type="password"
               className={`form-control ${
                 errors.passwordMismatch ? "is-invalid" : ""
               }`}
-              id="cpassword"
-              onChange={onChange}
               name="cpassword"
+              onChange={onChange}
               required
               minLength={5}
               placeholder="Re-enter your password"
             />
             {errors.passwordMismatch && (
-              <div className="invalid-feedback">Passwords do not match</div>
+              <div className="invalid-feedback d-block">
+                Passwords do not match
+              </div>
             )}
           </div>
 
@@ -178,7 +285,7 @@ function SignUp(props) {
 
         <div className="text-center mt-3">
           <small className="text-muted">
-            Already have an account? <a href="/login">Login</a>
+            Already have an account? <Link to="/login">Login</Link>
           </small>
         </div>
       </div>

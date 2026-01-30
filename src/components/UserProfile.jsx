@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+/* SAME COUNTRIES AS SIGNUP */
+const countries = [
+  { name: "India", code: "+91" },
+  { name: "United States", code: "+1" },
+  { name: "United Kingdom", code: "+44" },
+  { name: "Australia", code: "+61" },
+];
+
 function UserProfile() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -8,42 +16,68 @@ function UserProfile() {
   const initialUser = {
     name: "",
     email: "",
+    phone: "",
+    countryCode: "+91",
     password: "",
     confirmPassword: "",
   };
 
   const [user, setUser] = useState(initialUser);
   const [savedUser, setSavedUser] = useState(initialUser);
+
   const [editable, setEditable] = useState({
     name: false,
     email: false,
+    phone: false,
   });
+
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  /* ---------------- GET USER DETAILS ---------------- */
+  /* ---------- HELPERS ---------- */
+  const detectCountryFromPhone = (phoneNumber) => {
+    if (!phoneNumber) return { code: "+91", phone: "" };
+
+    const match = countries.find((c) =>
+      phoneNumber.startsWith(c.code)
+    );
+
+    if (match) {
+      return {
+        code: match.code,
+        phone: phoneNumber.replace(match.code, ""),
+      };
+    }
+
+    return { code: "+91", phone: phoneNumber.replace(/^\+/, "") };
+  };
+
+  /* ---------- GET USER ---------- */
   const getUserDetails = async () => {
     try {
       const response = await fetch(
         "http://localhost:3000/api/auth/getuser",
         {
           method: "GET",
-          headers: {
-            "auth-token": token,
-          },
+          headers: { "auth-token": token },
         }
       );
 
       const data = await response.json();
 
       if (data.name || data.email) {
+        const phoneInfo = detectCountryFromPhone(data.phoneNumber);
+
         const cleanUser = {
-          name: data.name,
-          email: data.email,
+          name: data.name || "",
+          email: data.email || "",
+          countryCode: phoneInfo.code,
+          phone: phoneInfo.phone,
           password: "",
           confirmPassword: "",
         };
+
         setUser(cleanUser);
         setSavedUser(cleanUser);
       }
@@ -60,21 +94,18 @@ function UserProfile() {
     }
   }, [navigate, token]);
 
-  /* ---------------- EDIT TOGGLE ---------------- */
+  /* ---------- EDIT TOGGLE ---------- */
   const toggleEdit = (field) => {
     setEditable((prev) => {
       const next = { ...prev, [field]: !prev[field] };
-
-      // Cancel edit → restore saved value
       if (prev[field]) {
         setUser((u) => ({ ...u, [field]: savedUser[field] }));
       }
-
       return next;
     });
   };
 
-  /* ---------------- PASSWORD TOGGLE ---------------- */
+  /* ---------- PASSWORD TOGGLE ---------- */
   const togglePasswordChange = () => {
     if (showPasswordFields) {
       setUser((u) => ({ ...u, password: "", confirmPassword: "" }));
@@ -83,12 +114,17 @@ function UserProfile() {
     setShowPasswordFields(!showPasswordFields);
   };
 
-  /* ---------------- INPUT CHANGE ---------------- */
+  /* ---------- INPUT CHANGE ---------- */
   const handleChange = (e) => {
-    setUser({ ...user, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Digits only for phone
+    if (name === "phone" && !/^\d*$/.test(value)) return;
+
+    setUser({ ...user, [name]: value });
   };
 
-  /* ---------------- UPDATE PROFILE ---------------- */
+  /* ---------- UPDATE ---------- */
   const handleUpdate = async () => {
     if (showPasswordFields && user.password !== user.confirmPassword) {
       setError("Password and Confirm Password do not match");
@@ -100,7 +136,12 @@ function UserProfile() {
     const payload = {};
     if (editable.name) payload.name = user.name;
     if (editable.email) payload.email = user.email;
-    if (showPasswordFields && user.password) payload.password = user.password;
+    if (editable.phone) {
+      payload.phoneNumber = `${user.countryCode}${user.phone}`;
+    }
+    if (showPasswordFields && user.password) {
+      payload.password = user.password;
+    }
 
     try {
       const response = await fetch(
@@ -118,22 +159,16 @@ function UserProfile() {
       const result = await response.json();
 
       if (result.success) {
-        // Save updated values as new baseline
-        const updatedUser = {
-          name: user.name,
-          email: user.email,
+        setSavedUser({
+          ...user,
           password: "",
           confirmPassword: "",
-        };
+        });
 
-        setSavedUser(updatedUser);
-        setUser(updatedUser);
-        setEditable({ name: false, email: false });
+        setEditable({ name: false, email: false, phone: false });
         setShowPasswordFields(false);
 
         setSuccess("Profile updated successfully");
-
-        // Auto-hide success message
         setTimeout(() => setSuccess(""), 3000);
       } else {
         setError(result.msg || "Update failed");
@@ -149,7 +184,7 @@ function UserProfile() {
       <div className="card shadow-sm p-4" style={{ width: "500px" }}>
         <h4 className="mb-4">User Profile</h4>
 
-        {/* FULL NAME */}
+        {/* NAME */}
         <div className="mb-3">
           <label className="form-label">Full Name</label>
           <div className="input-group">
@@ -162,11 +197,7 @@ function UserProfile() {
               onChange={handleChange}
             />
             <button
-              className={`btn ${
-                editable.name
-                  ? "btn-outline-danger"
-                  : "btn-outline-secondary"
-              }`}
+              className="btn btn-outline-secondary"
               onClick={() => toggleEdit("name")}
             >
               {editable.name ? "Cancel" : "Edit"}
@@ -187,9 +218,7 @@ function UserProfile() {
               onChange={handleChange}
             />
             <button
-              className={`btn ${
-                editable.email ? "btn-outline-danger" : "btn-outline-secondary"
-              }`}
+              className="btn btn-outline-secondary"
               onClick={() => toggleEdit("email")}
             >
               {editable.email ? "Cancel" : "Edit"}
@@ -197,11 +226,51 @@ function UserProfile() {
           </div>
         </div>
 
+        {/* PHONE */}
+        <div className="mb-3">
+          <label className="form-label">Phone Number</label>
+          <div className="d-flex gap-2">
+            <select
+              className="form-select"
+              style={{ maxWidth: "120px" }}
+              name="countryCode"
+              value={user.countryCode}
+              disabled={!editable.phone}
+              onChange={handleChange}
+            >
+              {countries.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name} ({c.code})
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="tel"
+              className="form-control"
+              name="phone"
+              value={user.phone}
+              disabled={!editable.phone}
+              onChange={handleChange}
+              placeholder="Phone number"
+            />
+          </div>
+
+          <button
+            className="btn btn-outline-secondary mt-2"
+            onClick={() => toggleEdit("phone")}
+          >
+            {editable.phone ? "Cancel" : "Edit"}
+          </button>
+        </div>
+
         {/* CHANGE PASSWORD */}
         <div className="mb-3">
           <button
             className={`btn ${
-              showPasswordFields ? "btn-outline-danger" : "btn-outline-primary"
+              showPasswordFields
+                ? "btn-outline-danger"
+                : "btn-outline-primary"
             }`}
             onClick={togglePasswordChange}
           >

@@ -1,10 +1,39 @@
 import React, { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { actionCreators } from "./state";
+import { bindActionCreators } from "redux";
+import { useDispatch } from "react-redux";
 
-function Checkout() {
+
+function Checkout({removeCartItem}) {
   const navigate = useNavigate();
-
+  const dispatch = useDispatch()
+  const {addUserCart,removeItem} = bindActionCreators(actionCreators,dispatch)
   const buyProducts = JSON.parse(localStorage.getItem("buyProducts")) || [];
+  const resetCartItems = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      "http://localhost:3000/api/auth/resetCartItems",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": token,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.success) {
+      console.log("Cart reset successfully");
+    }
+  } catch (error) {
+    console.error("Failed to reset cart items", error);
+  }
+};
 
   useEffect(() => {
     if (!localStorage.getItem("token")) {
@@ -68,8 +97,20 @@ function Checkout() {
 
           {/* Buy Button */}
           <div className="d-grid mt-4">
-            <button className="btn btn-primary btn-lg fw-bold">
-              Buy Now
+            <button className="btn btn-primary btn-lg fw-bold"
+            onClick={()=>{navigate("/congractulation")
+            if(buyProducts.length>1)  
+            {
+              addUserCart([])
+              resetCartItems()
+              
+            }
+            else if(buyProducts.length === 1){
+              removeCartItem(buyProducts[0])
+              removeItem(buyProducts[0])
+            }
+            }}>
+              Pay
             </button>
           </div>
         </div>

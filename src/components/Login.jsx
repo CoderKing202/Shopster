@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { actionCreators } from "./state";
 import { bindActionCreators } from "redux";
 import { useDispatch } from "react-redux";
-
+import { Link } from "react-router-dom";
 function Login(props) {
   const navigate = useNavigate();
   const dispatcher = useDispatch()
@@ -140,7 +140,7 @@ function Login(props) {
 
         <div className="text-center mt-3">
           <small className="text-muted">
-            Don’t have an account? <a href="/signup">Create one</a>
+            Don’t have an account? <Link to="/signup">Create one</Link>
           </small>
         </div>
       </div>

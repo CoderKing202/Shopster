@@ -17,6 +17,8 @@ import Cart from "./components/Cart";
 import { useDispatch } from "react-redux";
 import { actionCreators } from "./components/state";
 import { bindActionCreators } from "redux";
+import Congratulation from "./components/Congractulation";
+import OrderHistory from "./components/OrderHistory";
 
 function App() {
   const dispatcher = useDispatch();
@@ -25,7 +27,7 @@ function App() {
   const [category, setCategory] = useState("Smartphones");
   const token = localStorage.getItem("token");
   const getCartItems = async () => {
-    console.log(token)
+    
     const response = await fetch("http://localhost:3000/api/auth/getCartItems", {
       method:"GET",
       headers:{
@@ -85,8 +87,10 @@ function App() {
             <Route path="/product/:id" element={<Product />} />
             <Route path="/search/:query" element={<SearchResults  addToCart={addToCart} removeCartItem={removeCartItem}/>} />
             <Route path="/cart" element={<Cart removeCartItem = {removeCartItem}/>} />
-            <Route path="/checkOut" element={<Checkout />} />
+            <Route path="/checkOut" element={<Checkout  removeCartItem={removeCartItem}/>} />
             <Route path="/userProfile" element={<UserProfile />} />
+            <Route path="/congractulation" element={<Congratulation/>}/>
+            <Route path="/orderHistory" element={<OrderHistory/>}/>
           </Routes>
         </div>
       </Router>

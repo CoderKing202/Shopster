@@ -29,7 +29,6 @@ function Categories(props) {
           <Link
             key={item}
             to={`/category/${formatCategory(item).toLowerCase()}`}
-            onClick={() => { setLoading(false); }}
             className="text-decoration-none text-dark"
           >
             <div className="d-flex flex-column align-items-center small" style={{ minWidth: "70px" }}>

@@ -4,14 +4,18 @@ import { useDispatch, useSelector } from "react-redux";
 import { actionCreators } from "./state";
 import { bindActionCreators } from "redux";
 
-
 function NavBar() {
-  const items = useSelector(state=>state.cartItems) 
-  const navigate = useNavigate();
-  const dispatcher = useDispatch();
-  const { logStatus, addUserCart } = bindActionCreators(actionCreators, dispatcher);
-  const collapseRef = useRef(null);
+  const items = useSelector((state) => state.cartItems);
   const logStat = useSelector((state) => state.logStatus);
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { logStatus, addUserCart } = bindActionCreators(
+    actionCreators,
+    dispatch
+  );
+
+  const collapseRef = useRef(null);
 
   const [products, setProducts] = useState([]);
   const [query, setQuery] = useState("");
@@ -21,8 +25,8 @@ function NavBar() {
   const logOut = () => {
     localStorage.removeItem("token");
     logStatus(false);
+    addUserCart([]);
     navigate("/");
-    addUserCart([])
   };
 
   useEffect(() => {
@@ -33,12 +37,14 @@ function NavBar() {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (query.trim() === "") {
+      if (!query.trim()) {
         setFiltered([]);
       } else {
         const q = query.toLowerCase();
         setFiltered(
-          products.filter((p) => p.title.toLowerCase().includes(q)).slice(0, 6)
+          products
+            .filter((p) => p.title.toLowerCase().includes(q))
+            .slice(0, 6)
         );
       }
     }, 250);
@@ -124,6 +130,7 @@ function NavBar() {
             </li>
           </ul>
 
+          {/* Search */}
           <form
             onSubmit={handleSearchSubmit}
             className="position-relative mx-lg-auto my-2 my-lg-0 d-flex"
@@ -163,6 +170,7 @@ function NavBar() {
             )}
           </form>
 
+          {/* Right Section */}
           <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-3 ms-lg-auto mt-3 mt-lg-0">
             {!logStat ? (
               <>
@@ -182,21 +190,39 @@ function NavBar() {
                 </Link>
               </>
             ) : (
-              <Link
-                to="/"
-                className="btn btn-primary w-100 w-lg-auto"
-                onClick={() => {
-                  logOut();
-                  closeMenu();
-                }}
-              >
-                LogOut
-              </Link>
+              <div className="d-flex align-items-center gap-3">
+                {/* Order History */}
+                <Link
+                  to="/orderHistory"
+                  title="Order History"
+                  onClick={closeMenu}
+                >
+                  <img
+                    src="https://cdn-icons-png.flaticon.com/512/12457/12457658.png
+"
+                    alt="Orders"
+                    width="52"
+                  />
+                </Link>
+
+                {/* Logout */}
+                <Link
+                  to="/"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    logOut();
+                    closeMenu();
+                    
+                  }}
+                >
+                  LogOut
+                </Link>
+              </div>
             )}
 
+            {/* Cart + Profile */}
             <div className="d-flex gap-3">
-              {/* Cart with badge */}
-              <Link to="/cart" className="position-relative">
+              <Link to="/cart" onClick={closeMenu} className="position-relative">
                 <img
                   src="https://cdn-icons-png.flaticon.com/512/263/263142.png"
                   alt="Cart"
@@ -210,7 +236,7 @@ function NavBar() {
                 </span>
               </Link>
 
-              <Link to="/userProfile">
+              <Link to="/userProfile" onClick={closeMenu}>
                 <img
                   src="https://cdn-icons-png.flaticon.com/512/847/847969.png"
                   alt="Profile"
