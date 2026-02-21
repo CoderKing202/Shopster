@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-/* SAME COUNTRIES AS SIGNUP */
-const countries = [
-  { name: "India", code: "+91" },
-  { name: "United States", code: "+1" },
-  { name: "United Kingdom", code: "+44" },
-  { name: "Australia", code: "+61" },
-];
+// /* SAME COUNTRIES AS SIGNUP */
+// const countries = [
+//   { name: "India", code: "+91" },
+//   { name: "United States", code: "+1" },
+//   { name: "United Kingdom", code: "+44" },
+//   { name: "Australia", code: "+61" },
+// ];
 
 function UserProfile() {
   const navigate = useNavigate();
@@ -16,8 +16,8 @@ function UserProfile() {
   const initialUser = {
     name: "",
     email: "",
-    phone: "",
-    countryCode: "+91",
+    // phone: "",
+    // countryCode: "+91",
     password: "",
     confirmPassword: "",
   };
@@ -28,7 +28,7 @@ function UserProfile() {
   const [editable, setEditable] = useState({
     name: false,
     email: false,
-    phone: false,
+    // phone: false,
   });
 
   const [showPasswordFields, setShowPasswordFields] = useState(false);
@@ -36,22 +36,22 @@ function UserProfile() {
   const [success, setSuccess] = useState("");
 
   /* ---------- HELPERS ---------- */
-  const detectCountryFromPhone = (phoneNumber) => {
-    if (!phoneNumber) return { code: "+91", phone: "" };
+  // const detectCountryFromPhone = (phoneNumber) => {
+  //   if (!phoneNumber) return { code: "+91", phone: "" };
 
-    const match = countries.find((c) =>
-      phoneNumber.startsWith(c.code)
-    );
+  //   const match = countries.find((c) =>
+  //     phoneNumber.startsWith(c.code)
+  //   );
 
-    if (match) {
-      return {
-        code: match.code,
-        phone: phoneNumber.replace(match.code, ""),
-      };
-    }
+  //   if (match) {
+  //     return {
+  //       code: match.code,
+  //       phone: phoneNumber.replace(match.code, ""),
+  //     };
+  //   }
 
-    return { code: "+91", phone: phoneNumber.replace(/^\+/, "") };
-  };
+  //   return { code: "+91", phone: phoneNumber.replace(/^\+/, "") };
+  // };
 
   /* ---------- GET USER ---------- */
   const getUserDetails = async () => {
@@ -67,13 +67,13 @@ function UserProfile() {
       const data = await response.json();
 
       if (data.name || data.email) {
-        const phoneInfo = detectCountryFromPhone(data.phoneNumber);
+        // const phoneInfo = detectCountryFromPhone(data.phoneNumber);
 
         const cleanUser = {
           name: data.name || "",
           email: data.email || "",
-          countryCode: phoneInfo.code,
-          phone: phoneInfo.phone,
+          // countryCode: phoneInfo.code,
+          // phone: phoneInfo.phone,
           password: "",
           confirmPassword: "",
         };
@@ -227,7 +227,7 @@ function UserProfile() {
         </div>
 
         {/* PHONE */}
-        <div className="mb-3">
+        {/* <div className="mb-3">
           <label className="form-label">Phone Number</label>
           <div className="d-flex gap-2">
             <select
@@ -235,8 +235,9 @@ function UserProfile() {
               style={{ maxWidth: "120px" }}
               name="countryCode"
               value={user.countryCode}
-              disabled={!editable.phone}
+              disabled
               onChange={handleChange}
+              
             >
               {countries.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -262,7 +263,7 @@ function UserProfile() {
           >
             {editable.phone ? "Cancel" : "Edit"}
           </button>
-        </div>
+        </div> */}
 
         {/* CHANGE PASSWORD */}
         <div className="mb-3">

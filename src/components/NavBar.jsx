@@ -176,7 +176,7 @@ function NavBar() {
               <>
                 <Link
                   to="/login"
-                  className="btn btn-outline-primary w-100 w-lg-auto"
+                  className="btn btn-primary w-100 w-lg-auto"
                   onClick={closeMenu}
                 >
                   Login

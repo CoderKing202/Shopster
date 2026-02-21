@@ -57,10 +57,35 @@ function Login(props) {
     const results = await response.json();
     setResults(results)
     if (results.success) {
-      localStorage.setItem("token", results.authtoken);
-      logStatus(true)
-      getCartItems()
-      navigate("/");
+      const otpResponse = await fetch(
+        "http://localhost:3000/api/auth/generate-otp",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: results.userId,
+            identifier: credentials.email,
+            channel: "email",
+            purpose: "login",
+          }),
+        },
+      );
+      localStorage.setItem(
+        "purposeData",
+        JSON.stringify({
+          userId: results.userId,
+          purpose: "login",
+          identifier: credentials.email,
+          channel: "email",
+        }),
+      );
+      localStorage.setItem("purpose",JSON.stringify({
+        purpose:"login"
+      }));
+      navigate("/otpVerification");
+     
     } else {
       setErrors({ invalidCredentials: true });
     }
@@ -141,6 +166,9 @@ function Login(props) {
         <div className="text-center mt-3">
           <small className="text-muted">
             Don’t have an account? <Link to="/signup">Create one</Link>
+          </small><br />
+          <small className="text-muted">
+           <Link to="/forgotPassword"> Forget Password? </Link>
           </small>
         </div>
       </div>

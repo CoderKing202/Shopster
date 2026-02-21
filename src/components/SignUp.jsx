@@ -5,39 +5,17 @@ import { bindActionCreators } from "redux";
 import { actionCreators } from "./state";
 import { Link } from "react-router-dom";
 
-const countries = [
-  { name: "India", code: "+91" },
-  { name: "United States", code: "+1" },
-  { name: "United Kingdom", code: "+44" },
-  { name: "Australia", code: "+61" },
-];
+const countries = [{ name: "India", code: "+91" }];
 
 function SignUp() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { logStatus, addUserCart } = bindActionCreators(
     actionCreators,
-    dispatch
+    dispatch,
   );
 
-  const getCartItems = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
 
-    const response = await fetch(
-      "http://localhost:3000/api/auth/getCartItems",
-      {
-        method: "GET",
-        headers: {
-          "auth-token": token,
-        },
-      }
-    );
-    const result = await response.json();
-    if (result.success) {
-      addUserCart(result.cartItems);
-    }
-  };
 
   const [credentials, setCredentials] = useState({
     name: "",
@@ -45,7 +23,7 @@ function SignUp() {
     password: "",
     cpassword: "",
     countryCode: "+91",
-    phone: "",
+    // phone: "",
   });
 
   const [results, setResults] = useState(null);
@@ -53,8 +31,8 @@ function SignUp() {
   const [errors, setErrors] = useState({
     passwordMismatch: false,
     emailsAlreadyExists: false,
-    phoneAlreadyExists: false,
-    invalidPhone: false,
+    // phoneAlreadyExists: false,
+    // invalidPhone: false,
   });
 
   const handleSubmit = async (e) => {
@@ -64,7 +42,7 @@ function SignUp() {
     setErrors((prev) => ({
       ...prev,
       emailsAlreadyExists: false,
-      phoneAlreadyExists: false,
+      // phoneAlreadyExists: false,
     }));
 
     // Password validation
@@ -74,45 +52,68 @@ function SignUp() {
     }
 
     // Phone validation (digits only, 6–15 length)
-    if (!/^\d{6,15}$/.test(credentials.phone)) {
-      setErrors((prev) => ({ ...prev, invalidPhone: true }));
-      return;
-    }
+    // if (!/^\d{6,15}$/.test(credentials.phone)) {
+    //   setErrors((prev) => ({ ...prev, invalidPhone: true }));
+    //   return;
+    // }
 
     const { name, email, password, phone, countryCode } = credentials;
-    const fullPhoneNumber = `${countryCode}${phone}`;
+    // const fullPhoneNumber = `${countryCode}${phone}`;
 
-    const response = await fetch(
-      "http://localhost:3000/api/auth/createuser",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          phoneNumber: fullPhoneNumber,
-        }),
-      }
-    );
+    const response = await fetch("http://localhost:3000/api/auth/createuser", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        // phoneNumber: fullPhoneNumber,
+      }),
+    });
 
     const data = await response.json();
     setResults(data);
 
     if (data.success) {
-      localStorage.setItem("token", data.authtoken);
-      logStatus(true);
-      getCartItems();
-      navigate("/");
+      // localStorage.setItem("token", data.authtoken);
+      // logStatus(true);
+      // getCartItems();
+      const otpResponse = await fetch(
+        "http://localhost:3000/api/auth/generate-otp",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: data.userId,
+            identifier: email,
+            channel: "email",
+            purpose: "register",
+          }),
+        },
+      );
+      localStorage.setItem(
+        "purposeData",
+        JSON.stringify({
+          userId: data.userId,
+          purpose: "register",
+          identifier: email,
+          channel: "email",
+        }),
+      );
+      localStorage.setItem("purpose",JSON.stringify({
+        purpose:"register"
+      }));
+      navigate("/otpVerification");
     } else {
       setErrors((prev) => ({
         ...prev,
-        emailsAlreadyExists:
-          data.error?.toLowerCase().includes("email"),
-        phoneAlreadyExists:
-          data.error?.toLowerCase().includes("phone"),
+        emailsAlreadyExists: data.error?.toLowerCase().includes("email"),
+        // phoneAlreadyExists:
+        //   data.error?.toLowerCase().includes("phone"),
       }));
     }
   };
@@ -121,7 +122,7 @@ function SignUp() {
     const { name, value } = e.target;
 
     // Allow only digits in phone field
-    if (name === "phone" && !/^\d*$/.test(value)) return;
+    // if (name === "phone" && !/^\d*$/.test(value)) return;
 
     setCredentials({ ...credentials, [name]: value });
 
@@ -133,13 +134,13 @@ function SignUp() {
       setErrors((prev) => ({ ...prev, emailsAlreadyExists: false }));
     }
 
-    if (name === "phone") {
-      setErrors((prev) => ({
-        ...prev,
-        invalidPhone: false,
-        phoneAlreadyExists: false,
-      }));
-    }
+    // if (name === "phone") {
+    //   setErrors((prev) => ({
+    //     ...prev,
+    //     invalidPhone: false,
+    //     phoneAlreadyExists: false,
+    //   }));
+    // }
   };
 
   return (
@@ -193,7 +194,7 @@ function SignUp() {
           </div>
 
           {/* PHONE */}
-          <div className="mb-3">
+          {/* <div className="mb-3">
             <label className="form-label fw-semibold">Phone Number</label>
             <div className="d-flex gap-2">
               <select
@@ -202,6 +203,7 @@ function SignUp() {
                 name="countryCode"
                 value={credentials.countryCode}
                 onChange={onChange}
+                disabled
               >
                 {countries.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -236,7 +238,7 @@ function SignUp() {
                 This phone number is already registered
               </div>
             )}
-          </div>
+          </div> */}
 
           {/* PASSWORD */}
           <div className="mb-3">
