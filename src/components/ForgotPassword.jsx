@@ -3,9 +3,45 @@ import React, { useState } from "react";
 function ForgotPassword() {
   const [email, setEmail] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Email submitted:", email);
+    const response = await fetch(`http://localhost:3000/api/auth/getUserIdbyEmail?email=${email}`,{
+    })
+    const data = await response.json()
+    console.log(data)
+    if(result.success){
+      const otpResponse = await fetch(
+        "http://localhost:3000/api/auth/generate-otp",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: data.userId,
+            identifier: email,
+            channel: "email",
+            purpose: "forgotPassword",
+          }),
+        },
+      );
+      localStorage.setItem(
+        "purposeData",
+        JSON.stringify({
+          userId: data.userId,
+          purpose: "forgotPassword",
+          identifier: email,
+          channel: "email",
+        }),
+      );
+      localStorage.setItem("purpose",JSON.stringify({
+        purpose:"register"
+      }));
+      navigate("/otpVerification");
+    }
+    else{
+
+    }
     // call API to send OTP
   };
 
@@ -20,7 +56,7 @@ function ForgotPassword() {
       >
         <h4 className="fw-bold text-center mb-3">Forgot Password</h4>
         <p className="text-muted text-center mb-4">
-          Enter your email to receive a reset code
+          Enter your email to receive OTP
         </p>
 
         <form onSubmit={handleSubmit}>

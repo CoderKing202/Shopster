@@ -7,15 +7,31 @@ function ResetPassword() {
   });
 
   const [error, setError] = useState("");
-
+  const [backendError,setBackendError] = useState("hello")
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
   };
-
-  const handleSubmit = (e) => {
+  const token = localStorage.getItem("resetToken")
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const response = await fetch("http://localhost:3000/api/auth/verifyOtp/resetPassword",{
+      method:"POST",
+      body:JSON.stringify({
+        password
+      }),
+      headers:{
+        "auth-token":token
+      }
+    })
 
+    const result = await response.json()
+    if(result.success){
+      
+    }
+    else{
+
+    }
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -44,7 +60,7 @@ function ResetPassword() {
             <label className="form-label fw-semibold">New Password</label>
             <input
               type="password"
-              className={`form-control ${error ? "is-invalid" : ""}`}
+              className={`form-control ${error? "is-invalid" : ""}`}
               name="password"
               placeholder="Enter new password"
               value={form.password}
@@ -52,7 +68,11 @@ function ResetPassword() {
               required
               minLength={5}
             />
+            {
+              backendError && <div className="invalid-feedback">{backendError}</div>
+            }
           </div>
+          
 
           <div className="mb-3">
             <label className="form-label fw-semibold">Confirm Password</label>
@@ -69,6 +89,7 @@ function ResetPassword() {
             {error && (
               <div className="invalid-feedback">{error}</div>
             )}
+            
           </div>
 
           <button

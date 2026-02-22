@@ -129,9 +129,17 @@ function OTPVerification({ onSubmit }) {
     const result = await response.json();
     console.log(result);
     if (result.success) {
-      localStorage.setItem("token", result.token);
-      logStatus(true)
-      navigate("/");
+
+      if(otpCredentials.purpose === "register" || otpCredentials.purpose === "login"){
+        localStorage.setItem("token", result.token);
+        logStatus(true)
+        navigate("/");
+      }
+      else{
+        localStorage.setItem("resetToken", result.token);
+        navigate("/resetPassword");
+      }
+      
       getCartItems()
     }
   };
