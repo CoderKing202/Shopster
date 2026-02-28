@@ -10,6 +10,51 @@ function Checkout({removeCartItem}) {
   const dispatch = useDispatch()
   const {addUserCart,removeItem} = bindActionCreators(actionCreators,dispatch)
   const buyProducts = JSON.parse(localStorage.getItem("buyProducts")) || [];
+  const handlePayment = async () => {
+  // 1. Create order
+  const res = await fetch("http://localhost:3000/api/orders/create-order", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ amount: 500 }), // ₹500
+  });
+
+  const data = await res.json();
+
+  // 2. Open Razorpay
+  const options = {
+    key: "rzp_test_xxxxx", // your test key
+    amount: data.order.amount,
+    currency: "INR",
+    order_id: data.order.id,
+
+    handler: async function (response) {
+      // 3. Verify payment
+      const verifyRes = await fetch(
+        "http://localhost:3000/api/orders/verify-payment",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(response),
+        }
+      );
+
+      const result = await verifyRes.json();
+
+      if (result.success) {
+        alert("Payment Successful ✅");
+      } else {
+        alert("Payment verification failed ❌");
+      }
+    },
+  };
+
+  const rzp = new window.Razorpay(options);
+  rzp.open();
+};
+
+
   const resetCartItems = async () => {
   try {
     const token = localStorage.getItem("token");
@@ -98,7 +143,8 @@ function Checkout({removeCartItem}) {
           {/* Buy Button */}
           <div className="d-grid mt-4">
             <button className="btn btn-primary btn-lg fw-bold"
-            onClick={()=>{navigate("/congractulation")
+            onClick={()=>{
+              // navigate("/congractulation")
             if(buyProducts.length>1)  
             {
               addUserCart([])
@@ -109,7 +155,10 @@ function Checkout({removeCartItem}) {
               removeCartItem(buyProducts[0])
               removeItem(buyProducts[0])
             }
-            }}>
+            handlePayment()
+            }
+            
+            }>
               Pay
             </button>
           </div>
