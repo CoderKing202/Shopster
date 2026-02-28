@@ -40,3 +40,17 @@
 .read-the-docs {
   color: #888;
 } */
+.otp-input {
+  width: 45px;
+  height: 55px;
+  font-size: 1.4rem;
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  text-align: center;
+  font-weight: bold;
+}
+
+.otp-input.error {
+  border: 2px solid red;
+  box-shadow: 0 0 5px rgba(255,0,0,0.5);
+}

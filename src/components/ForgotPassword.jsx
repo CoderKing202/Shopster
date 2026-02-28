@@ -1,15 +1,17 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
-
+  const navigate = useNavigate()
+  const [error,setError] = useState("")
   const handleSubmit = async (e) => {
     e.preventDefault();
     const response = await fetch(`http://localhost:3000/api/auth/getUserIdbyEmail?email=${email}`,{
     })
     const data = await response.json()
     console.log(data)
-    if(result.success){
+    if(data.success){
       const otpResponse = await fetch(
         "http://localhost:3000/api/auth/generate-otp",
         {
@@ -35,12 +37,12 @@ function ForgotPassword() {
         }),
       );
       localStorage.setItem("purpose",JSON.stringify({
-        purpose:"register"
+        purpose:"forgotPassword"
       }));
       navigate("/otpVerification");
     }
     else{
-
+      setError(data.error)
     }
     // call API to send OTP
   };
@@ -64,12 +66,13 @@ function ForgotPassword() {
             <label className="form-label fw-semibold">Email Address</label>
             <input
               type="email"
-              className="form-control"
+              className={`form-control ${error ? "is-invalid" : ""}`}
               placeholder="Enter your email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) =>{ setEmail(e.target.value),setError("")}}
               required
             />
+            {error && <div className="invalid-feedback">{error}</div>}
           </div>
 
           <button
