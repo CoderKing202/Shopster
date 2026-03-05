@@ -14,7 +14,7 @@ import AddToCart from "./components/Cart";
 import Checkout from "./components/Checkout";
 import UserProfile from "./components/UserProfile";
 import Cart from "./components/Cart";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { actionCreators } from "./components/state";
 import { bindActionCreators } from "redux";
 import Congratulation from "./components/Congractulation";
@@ -31,7 +31,8 @@ function App() {
   );
   const [count, setCount] = useState(0);
   const [category, setCategory] = useState("Smartphones");
-  const token = localStorage.getItem("token");
+  const token = useSelector((state) => state.token);
+  console.log(token);
   const getCartItems = async () => {
     const response = await fetch(
       "http://localhost:3000/api/auth/getCartItems",
@@ -45,12 +46,9 @@ function App() {
     const result = await response.json();
     if (result.success) {
       addUserCart(result.cartItems);
-      console.log(result.cartItems);
     }
   };
   const addToCart = async (product) => {
-    console.log(token);
-
     const response = await fetch("http://localhost:3000/api/auth/addCartItem", {
       method: "POST",
       headers: {
@@ -99,7 +97,15 @@ function App() {
             <Route path="/loginplease" element={<LoginPrompt />} />
             <Route path="/signUp" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/product/:id" element={<Product />} />
+            <Route
+              path="/product/:id"
+              element={
+                <Product
+                  addToCart={addToCart}
+                  removeCartItem={removeCartItem}
+                />
+              }
+            />
             <Route
               path="/search/:query"
               element={

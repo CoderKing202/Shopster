@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 const OrderHistory = () => {
   const [ordersByDate, setOrdersByDate] = useState({});
   const [loading, setLoading] = useState(true);
+  const token = useSelector((state) => state.token);
 
   useEffect(() => {
     const fetchOrderHistory = async () => {
       try {
-        const token = localStorage.getItem("token");
 
         const response = await fetch(
           "http://localhost:3000/api/auth/getuser",
@@ -82,7 +84,9 @@ const OrderHistory = () => {
 
           <div className="row g-4">
             {products.map((product, index) => (
-              <div key={index} className="col-md-6 col-lg-4">
+              
+              <div className="col-md-6 col-lg-4">
+                <Link style={{textDecoration:'none'}} key={index} to={`/product/${product.id}`}>
                 <div className="card h-100 shadow-sm">
                   {product.thumbnail && (
                     <img
@@ -110,7 +114,7 @@ const OrderHistory = () => {
                       ✔ Order Completed
                     </span>
                   </div>
-                </div>
+                </div></Link>
               </div>
             ))}
           </div>

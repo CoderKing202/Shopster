@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { bindActionCreators } from "redux";
 import { actionCreators } from "./state";
+import { useSelector } from "react-redux";
 
 function OTPVerification({ onSubmit }) {
   const navigate = useNavigate();
@@ -20,11 +21,12 @@ function OTPVerification({ onSubmit }) {
   const [generateCounter, setGenerateCounter] = useState(5);
 
   const dispatch = useDispatch();
-  const { logStatus, addUserCart } = bindActionCreators(
+  const { logStatus, addUserCart,setToken } = bindActionCreators(
     actionCreators,
     dispatch,
   );
   const [redirectTime, setRedirectTime] = useState(5);
+  const token = useSelector((state) => state.token);
 
   let creds;
   const resendOTP = async () => {
@@ -73,7 +75,6 @@ function OTPVerification({ onSubmit }) {
     }
   };
   const getCartItems = async () => {
-    const token = localStorage.getItem("token");
     if (!token) return;
 
     const response = await fetch(
@@ -121,7 +122,7 @@ function OTPVerification({ onSubmit }) {
   useEffect(() => {
     (async () => {
       creds = JSON.parse(localStorage.getItem("purposeData"));
-      console.log(creds);
+      
       if (!creds) {
         const path = JSON.parse(localStorage.getItem("purpose"));
         if (path.purpose === "register") {
@@ -153,7 +154,7 @@ function OTPVerification({ onSubmit }) {
       if (isReloadingRef.current) return;
 
       // const creds = JSON.parse(localStorage.getItem("purposeData"))
-      // console.log(creds.userId)
+      
       const response = await fetch("http://localhost:3000/api/auth/deleteOTP", {
         method: "POST",
         body: JSON.stringify({ userId: creds.userId }),
@@ -211,9 +212,9 @@ function OTPVerification({ onSubmit }) {
   // verify otp
   const verifyOtp = async () => {
     if (!otpCredentials) return;
-    console.log(otpCredentials);
+    
     const finalOtp = otp.join("");
-    console.log(finalOtp);
+    
 
     const response = await fetch("http://localhost:3000/api/auth/verifyOtp", {
       method: "POST",
@@ -225,7 +226,7 @@ function OTPVerification({ onSubmit }) {
       }),
     });
     const result = await response.json();
-    console.log(result);
+    
     if (result.success) {
       success.current = true
       if (
@@ -233,6 +234,7 @@ function OTPVerification({ onSubmit }) {
         otpCredentials.purpose === "login"
       ) {
         localStorage.setItem("token", result.token);
+        setToken(result.token)
         logStatus(true);
         navigate("/");
       } else if (otpCredentials.purpose === "forgotPassword") {
@@ -243,7 +245,7 @@ function OTPVerification({ onSubmit }) {
       getCartItems();
     } else {
       if (result.error === "wrongOtp") {
-        console.log(result.attempts);
+        
 
         setError(
           `Incorrect OTP. Only ${5 - result.attempts} attempts remaining`,

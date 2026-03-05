@@ -31,22 +31,28 @@ export const addUserCart = (items) => {
     });
   };
 };
-export const incrementProductQuantity =(item)=>{
-  return((dispatch)=>{
+export const incrementProductQuantity = (item) => {
+  return (dispatch) => {
     dispatch({
-      type:"incrementQuantity",
-      payload:item
-    })
-  }
-  )
+      type: "incrementQuantity",
+      payload: item,
+    });
+  };
+};
+export const decrementProductQuantity = (item) => {
+  return (dispatch) => {
+    dispatch({
+      type: "decrementQuantity",
+      payload: item,
+    });
+  };
+};
 
-}
-export const decrementProductQuantity =(item)=>{
-  return((dispatch)=>{
+export const setToken = (item) => {
+  return (dispatch) => {
     dispatch({
-      type:"decrementQuantity",
+      type:"setToken",
       payload:item
     })
-    }
-  )
-}
+  };
+};

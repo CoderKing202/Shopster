@@ -8,10 +8,9 @@ import { useSelector } from "react-redux";
 
 
 function Home(props) {
-
+  const [products,setProducts] = useState()
   const logStatus = useSelector(state=>state.logStatus)
   const item = useSelector(state=>state.item)
-  console.log(logStatus)
   const [slideImages,setslideImages] = useState([])
 useEffect(() => {
   const fetchProducts = async () => {
@@ -19,6 +18,7 @@ useEffect(() => {
       const res = await axios.get("https://dummyjson.com/products?limit=5");
 
       const products = res.data.products;
+      setProducts(products)
 
       // create array of 5 image URLs (first image of each product)
       const imageUrls = products.map(product => product.images[0]);
@@ -38,7 +38,7 @@ useEffect(() => {
      
 
         {/* Hero banner */}
-       <Corousel images={slideImages}/>
+       <Corousel products={products}/>
 <Categories/>        {/* First product row */}
         <SectionRow title="Featured Items">
           <ProductCard title="Item A" subtitle="Extra info" />

@@ -11,16 +11,16 @@ function Cart({ removeCartItem }) {
   const navigate = useNavigate();
   const cartItems = useSelector((state) => state.cartItems);
   const dispatcher = useDispatch();
-  const token = localStorage.getItem("token");
+  const token = useSelector((state) => state.token);
   const { removeItem, incrementProductQuantity, decrementProductQuantity } =
     bindActionCreators(actionCreators, dispatcher);
   const incrementQuantity = async (product) => {
-      console.log(product.id)
+    console.log(product.id);
     const response = await fetch(
       "http://localhost:3000/api/auth/incrementQuantity",
       {
         method: "POST",
-        body: JSON.stringify({ id : product.id}),
+        body: JSON.stringify({ id: product.id }),
         headers: {
           "Content-Type": "application/json",
           "auth-token": token,
@@ -33,25 +33,23 @@ function Cart({ removeCartItem }) {
     }
   };
 
-  const handleCheckout = ()=>{
-    localStorage.setItem("buyProducts",JSON.stringify(cartItems))
-  }
+  const handleCheckout = () => {
+    localStorage.setItem("buyProducts", JSON.stringify(cartItems));
+  };
   const decrementQuantity = async (product) => {
-  
     const response = await fetch(
       "http://localhost:3000/api/auth/decrementQuantity",
       {
         method: "POST",
-        body: JSON.stringify({ id:product.id }),
+        body: JSON.stringify({ id: product.id }),
         headers: {
           "Content-Type": "application/json",
           "auth-token": token,
         },
       },
     );
-    const result = await response.json()
-    if(result.success)
-    {
+    const result = await response.json();
+    if (result.success) {
       decrementProductQuantity(product);
     }
   };
@@ -64,19 +62,19 @@ function Cart({ removeCartItem }) {
   const quantityDecrease = (e, product) => {
     e.stopPropagation();
     if (product.quantity > 1) {
-      decrementQuantity(product)
+      decrementQuantity(product);
     }
   };
 
   useEffect(() => {
-    if (!localStorage.getItem("token")) {
+    if (!token) {
       navigate("/loginplease");
     }
   }, [navigate]);
 
   const handleBuyNow = (item) => {
-    localStorage.setItem("buyProducts",JSON.stringify([item]))
-    navigate(`/checkOut`)
+    localStorage.setItem("buyProducts", JSON.stringify([item]));
+    navigate(`/checkOut`);
   };
 
   const handleRemove = (item) => {
@@ -84,7 +82,7 @@ function Cart({ removeCartItem }) {
     removeCartItem(item);
     removeItem(item);
   };
-   
+
   return (
     <div className="container-fluid d-flex justify-content-center mt-4">
       <div style={{ width: "90%" }}>
@@ -175,7 +173,9 @@ function Cart({ removeCartItem }) {
             <div className="d-flex justify-content-end mt-4">
               <button
                 className="btn btn-primary btn-lg px-5"
-                onClick={() => {navigate("/checkout"),handleCheckout()}}
+                onClick={() => {
+                  (navigate("/checkout"), handleCheckout());
+                }}
               >
                 Checkout
               </button>

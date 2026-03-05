@@ -1,12 +1,19 @@
 import React from "react";
-
-function Carousel({ images = [] }) {
+import { useEffect } from "react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+function Carousel({ products = [] }) {
+  const [slideImages,setslideImages] = useState([])
+  useEffect(()=>{
+    const imageUrls = products.map(product => product.images[0]);
+    console.log(imageUrls)
+  },[])
   return (
     <div id="carouselExampleDark" className="carousel carousel-dark slide" data-bs-ride="carousel">
-
+      
       {/* Indicators */}
       <div className="carousel-indicators">
-        {images.map((_, index) => (
+        {products.map((_, index) => (
           <button
             key={index}
             type="button"
@@ -21,14 +28,17 @@ function Carousel({ images = [] }) {
 
       {/* Slides */}
       <div className="carousel-inner">
-        {images.map((imageUrl, index) => (
+        {products.map((product, index) => 
+        (
+          <Link key={index} to={`/product/${product.id}`}>
           <div
             key={index}
             className={`carousel-item ${index === 0 ? "active" : ""}`}
             data-bs-interval="3000"
           >
-            <img src={imageUrl} className="d-block w-100" alt={`Slide ${index + 1}`} />
+            <img src={product.images[0]} className="d-block w-100" alt={`Slide ${index + 1}`} />
           </div>
+          </Link>
         ))}
       </div>
 

@@ -3,85 +3,134 @@ import { useNavigate } from "react-router-dom";
 import { actionCreators } from "./state";
 import { bindActionCreators } from "redux";
 import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 
-
-function Checkout({removeCartItem}) {
+function Checkout({ removeCartItem }) {
   const navigate = useNavigate();
-  const dispatch = useDispatch()
-  const {addUserCart,removeItem} = bindActionCreators(actionCreators,dispatch)
+  const dispatch = useDispatch();
+  const { addUserCart, removeItem } = bindActionCreators(
+    actionCreators,
+    dispatch,
+  );
+  const token = useSelector((state) => state.token);
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
   const buyProducts = JSON.parse(localStorage.getItem("buyProducts")) || [];
-  const handlePayment = async () => {
-  // 1. Create order
-  const res = await fetch("http://localhost:3000/api/orders/create-order", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ amount: 500 }), // ₹500
-  });
+  const api_key = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
-  const data = await res.json();
-
-  // 2. Open Razorpay
-  const options = {
-    key: "rzp_test_xxxxx", // your test key
-    amount: data.order.amount,
-    currency: "INR",
-    order_id: data.order.id,
-
-    handler: async function (response) {
-      // 3. Verify payment
-      const verifyRes = await fetch(
-        "http://localhost:3000/api/orders/verify-payment",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(response),
-        }
-      );
-
-      const result = await verifyRes.json();
-
-      if (result.success) {
-        alert("Payment Successful ✅");
-      } else {
-        alert("Payment verification failed ❌");
-      }
-    },
+  const totalCheckOutAmount = () => {
+    let amount = 0;
+    console.log(buyProducts);
+    buyProducts.forEach((product) => {
+      amount += product.price * product.quantity;
+    });
+    // let totalAmount = await DollarToRupeeConverter(amount);
+    let totalAmount = amount;
+    console.log(totalAmount);
+    return totalAmount;
   };
 
-  const rzp = new window.Razorpay(options);
-  rzp.open();
-};
+  const DollarToRupeeConverter = async (amount) => {
+    const response = await fetch(
+      "https://api.exchangerate-api.com/v4/latest/USD",
+    );
+    const result = await response.json();
+    const realAmount = amount * result.rates.INR;
+    return realAmount;
+  };
 
+  const handlePayment = async () => {
+    const isLoaded = await loadRazorpay();
+
+    if (!isLoaded) {
+      alert("Razorpay SDK failed to load");
+      return;
+    }
+
+    // 1. Create order
+    const res = await fetch("http://localhost:3000/api/orders/create-order", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ amount: /*await*/ totalCheckOutAmount() }), // ₹500
+    });
+
+    const data = await res.json();
+
+    // 2. Open Razorpay
+    const options = {
+      key: api_key, // your test key
+      amount: data.order.amount,
+      currency: "INR",
+      order_id: data.order.id,
+
+      handler: async function (response) {
+        // 3. Verify payment
+        const verifyRes = await fetch(
+          "http://localhost:3000/api/orders/verify-payment",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(response),
+          },
+        );
+
+        const result = await verifyRes.json();
+
+        if (result.success) {
+          if (buyProducts.length > 1) {
+            addUserCart([]);
+            resetCartItems();
+          } else if (buyProducts.length === 1) {
+            removeCartItem(buyProducts[0]);
+            removeItem(buyProducts[0]);
+          }
+          navigate("/congractulation");
+          alert("Payment Successful ✅");
+        } else {
+          alert("Payment verification failed ❌");
+        }
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
 
   const resetCartItems = async () => {
-  try {
-    const token = localStorage.getItem("token");
+    try {
 
-    const response = await fetch(
-      "http://localhost:3000/api/auth/resetCartItems",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": token,
+      const response = await fetch(
+        "http://localhost:3000/api/auth/resetCartItems",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": token,
+          },
         },
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log("Cart reset successfully");
       }
-    );
-
-    const data = await response.json();
-
-    if (data.success) {
-      console.log("Cart reset successfully");
+    } catch (error) {
+      console.error("Failed to reset cart items", error);
     }
-  } catch (error) {
-    console.error("Failed to reset cart items", error);
-  }
-};
+  };
 
   useEffect(() => {
-    if (!localStorage.getItem("token")) {
+    if (!token) {
       navigate("/loginplease");
     }
   }, [navigate]);
@@ -89,7 +138,7 @@ function Checkout({removeCartItem}) {
   const totalPayable = useMemo(() => {
     return buyProducts.reduce(
       (sum, item) => sum + item.price * item.quantity,
-      0
+      0,
     );
   }, [buyProducts]);
 
@@ -142,23 +191,12 @@ function Checkout({removeCartItem}) {
 
           {/* Buy Button */}
           <div className="d-grid mt-4">
-            <button className="btn btn-primary btn-lg fw-bold"
-            onClick={()=>{
-              // navigate("/congractulation")
-            if(buyProducts.length>1)  
-            {
-              addUserCart([])
-              resetCartItems()
-              
-            }
-            else if(buyProducts.length === 1){
-              removeCartItem(buyProducts[0])
-              removeItem(buyProducts[0])
-            }
-            handlePayment()
-            }
-            
-            }>
+            <button
+              className="btn btn-primary btn-lg fw-bold"
+              onClick={() => {
+                handlePayment();
+              }}
+            >
               Pay
             </button>
           </div>

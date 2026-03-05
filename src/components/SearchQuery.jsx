@@ -1,21 +1,45 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Categories from "./Categories";
+import { useSelector } from "react-redux";
+import { bindActionCreators } from "redux";
+import { useDispatch } from "react-redux";
+import { actionCreators } from "./state";
 
-function SearchResults() {
+function SearchResults({ addToCart,removeCartItem }) {
   const { query } = useParams();
   const navigate = useNavigate();
-
+  const items = useSelector((state) => state.cartItems);
+    const logStatus = useSelector((state) => state.logStatus);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortType, setSortType] = useState("");
-
-  const handleAddToCart = () =>{};
+  const itemDispatch = useDispatch()
+  const { addItem, removeItem } = bindActionCreators(
+      actionCreators,
+      itemDispatch
+    );
+    const handleAddToCart = (e, item) => {
+    e.preventDefault();
+    if (logStatus) {
+      item["quantity"] = 1
+      
+      
+      addToCart(item)
+      addItem(item);
+    } else {
+      navigate("/loginplease");
+    }
+  };
+  const handleRemoveFromCart = (e, item) => {
+    e.preventDefault();
+    removeCartItem(item)
+    removeItem(item)
+  };
    const handleBuyNow = (product) => {
     product.quantity=1
     localStorage.setItem("buyProducts",JSON.stringify([product]))
-    navigate("/checkOut");
-  
+    navigate("/checkOut"); 
   };
 
   useEffect(() => {
@@ -119,19 +143,31 @@ function SearchResults() {
                       <div className="card-body d-flex flex-column">
                         <h6 className="card-title">{product.title}</h6>
                         <p className="card-text fw-bold mb-2">
-                          ${product.price}
+                         <del>${(product.price/(1-product.discountPercentage/ 100)).toFixed(2)}</del> ${product.price}
                         </p>
 
                         <div className="d-flex justify-content-between mt-auto">
-                          <button
-                            className="btn btn-sm btn-primary"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleAddToCart();
-                            }}
-                          >
-                            Add to Cart
-                          </button>
+                          {items.filter((item) => {
+                              return item.id === product.id;
+                            }).length === 0 ? (
+                              <button
+                                className="btn btn-sm btn-primary"
+                                onClick={(e) => {
+                                  handleAddToCart(e, product);
+                                }}
+                              >
+                                Add to Cart
+                              </button>
+                            ) : (
+                              <button
+                                className="btn btn-sm btn-danger"
+                                onClick={(e) => {
+                                  handleRemoveFromCart(e, product);
+                                }}
+                              >
+                                Remove from Cart
+                              </button>
+                            )}
                           <button
                             className="btn btn-sm btn-success"
                             onClick={(e) => {

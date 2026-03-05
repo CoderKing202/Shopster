@@ -10,7 +10,7 @@ function NavBar() {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { logStatus, addUserCart } = bindActionCreators(
+  const { logStatus, addUserCart, setToken } = bindActionCreators(
     actionCreators,
     dispatch
   );
@@ -25,6 +25,7 @@ function NavBar() {
   const logOut = () => {
     localStorage.removeItem("token");
     logStatus(false);
+    setToken(null)
     addUserCart([]);
     navigate("/");
   };
@@ -228,12 +229,13 @@ function NavBar() {
                   alt="Cart"
                   width="28"
                 />
-                <span
+                {!logStat ?<></>
+               : <span
                   className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                   style={{ fontSize: "0.65rem" }}
                 >
                   {items.length}
-                </span>
+                </span>}
               </Link>
 
               <Link to="/userProfile" onClick={closeMenu}>

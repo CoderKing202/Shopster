@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useRef } from "react";
+import { useSelector } from "react-redux";
 
 const Congratulation = () => {
   const hasSentRef = useRef(false);
   const [countdown, setCountdown] = useState(5);
-  const token = localStorage.getItem("token");
+  const token = useSelector((state) => state.token);
   const orderedProducts = JSON.parse(localStorage.getItem("buyProducts")).map(
     product => ({
       ...product,
@@ -30,7 +31,7 @@ const Congratulation = () => {
   useEffect(() => {
       if (hasSentRef.current) return;
   hasSentRef.current = true;
-    if (!localStorage.getItem("token")) {
+    if (!token) {
       navigate("/loginplease");
     } else {
       

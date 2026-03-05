@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { useSelector } from "react-redux";
 // /* SAME COUNTRIES AS SIGNUP */
 // const countries = [
 //   { name: "India", code: "+91" },
@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 
 function UserProfile() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const token = useSelector((state) => state.token);
 
   const initialUser = {
     name: "",

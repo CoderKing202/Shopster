@@ -1,20 +1,43 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Categories from "./Categories";
+import { bindActionCreators } from "redux";
+import { actionCreators } from "./state";
+import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 
-function Product() {
+function Product({ addToCart, removeCartItem }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const logStatus = useSelector((state) => state.logStatus);
   const [selectedImage, setSelectedImage] = useState("");
-  
- 
+  const items = useSelector((state) => state.cartItems);
+  const itemDispatch = useDispatch();
+  const { addItem, removeItem } = bindActionCreators(
+    actionCreators,
+    itemDispatch,
+  );
+  const handleAddToCart = (e, item) => {
+    e.preventDefault();
+    if (logStatus) {
+      item["quantity"] = 1;
 
-  const handleAddToCart = () => {
-    
+      addToCart(item);
+      addItem(item);
+    } else {
+      navigate("/loginplease");
+    }
+  };
+  const handleRemoveFromCart = (e, item) => {
+    e.preventDefault();
+    removeCartItem(item);
+    removeItem(item);
   };
 
   const handleBuyNow = () => {
+    product.quantity = 1;
+    localStorage.setItem("buyProducts", JSON.stringify([product]));
     navigate("/checkOut");
   };
 
@@ -86,7 +109,16 @@ function Product() {
               {product.brand} · {product.category}
             </p>
 
-            <h4 className="text-success">${product.price}</h4>
+            <h4 className="text-success">
+              <del>
+                $
+                {(
+                  product.price /
+                  (1 - product.discountPercentage / 100)
+                ).toFixed(2)}
+              </del>{" "}
+              ${product.price}
+            </h4>
 
             {product.discountPercentage && (
               <span className="badge bg-danger mb-2">
@@ -120,8 +152,6 @@ function Product() {
               </li>
             </ul>
             <ul className="list-group list-group-flush mb-3">
-           
-
               {product.dimensions && (
                 <li className="list-group-item">
                   <strong>Dimensions:</strong> {product.dimensions.width} ×{" "}
@@ -135,34 +165,47 @@ function Product() {
             </ul>
 
             <div className="d-flex gap-3 mt-4">
+              {items.filter((item) => {
+                return item.id === product.id;
+              }).length === 0 ? (
+                <button
+                  className="btn btn-primary btn-lg w-50"
+                  onClick={(e) => {
+                    handleAddToCart(e, product);
+                  }}
+                >
+                  Add to Cart
+                </button>
+              ) : (
+                <button
+                  className="btn btn-danger btn-lg h-50 w-70"
+                  onClick={(e) => {
+                    handleRemoveFromCart(e, product);
+                  }}
+                >
+                  Remove from Cart
+                </button>
+              )}
               <button
-                className="btn btn-primary btn-lg w-50"
-                onClick={handleAddToCart}
-              >
-                Add to Cart
-              </button>
-              <button
-                className="btn btn-success btn-lg w-50"
+                className="btn btn-success btn-lg"
                 onClick={handleBuyNow}
               >
                 Buy Now
               </button>
             </div>
-            
           </div>
           {product.reviews && product.reviews.length > 0 && (
-  <div className="mt-5">
-    <h5>Customer Reviews</h5>
-    {product.reviews.map((review, index) => (
-      <div key={index} className="border rounded p-3 mb-2">
-        <strong>{review.reviewerName}</strong> — ⭐ {review.rating}
-        <p className="mb-1">{review.comment}</p>
-        <small className="text-muted">{review.date}</small>
-      </div>
-    ))}
-  </div>
-)}
-
+            <div className="mt-5">
+              <h5>Customer Reviews</h5>
+              {product.reviews.map((review, index) => (
+                <div key={index} className="border rounded p-3 mb-2">
+                  <strong>{review.reviewerName}</strong> — ⭐ {review.rating}
+                  <p className="mb-1">{review.comment}</p>
+                  <small className="text-muted">{review.date}</small>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>

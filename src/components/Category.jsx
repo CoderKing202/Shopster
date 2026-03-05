@@ -15,9 +15,9 @@ function Category({ category, addToCart,removeCartItem }) {
     actionCreators,
     itemDispatch
   );
-  const token = localStorage.getItem("token");
+  const token = useSelector((state) => state.token);
   const items = useSelector((state) => state.cartItems);
-  console.log(logStatus);
+  
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { categoryName } = useParams();
@@ -28,8 +28,8 @@ function Category({ category, addToCart,removeCartItem }) {
     e.preventDefault();
     if (logStatus) {
       item["quantity"] = 1
-      console.log("item1")
-      console.log(item)
+      
+      
       addToCart(item)
       addItem(item);
     } else {
@@ -66,7 +66,7 @@ function Category({ category, addToCart,removeCartItem }) {
   }, [categoryName]);
 
   const sortedProducts = [...products];
-  if (sortType === "price-asc") {
+  if (sortType === "price-awsc") {
     sortedProducts.sort((a, b) => a.price - b.price);
   } else if (sortType === "price-desc") {
     sortedProducts.sort((a, b) => b.price - a.price);
@@ -131,7 +131,7 @@ function Category({ category, addToCart,removeCartItem }) {
                         <div className="card-body d-flex flex-column">
                           <h6 className="card-title">{product.title}</h6>
                           <p className="card-text fw-bold mb-2">
-                            ${product.price}
+                           <del>${(product.price/(1-product.discountPercentage/ 100)).toFixed(2)}</del> ${product.price}
                           </p>
                           <div className="d-flex justify-content-between mt-auto">
                             {items.filter((item) => {

@@ -4,13 +4,16 @@ import { actionCreators } from "./state";
 import { bindActionCreators } from "redux";
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+
+
 function Login(props) {
   const navigate = useNavigate();
   const dispatcher = useDispatch()
   const {logStatus,addUserCart} = bindActionCreators(actionCreators,dispatcher)
   
   const getCartItems = async () => {
-    const token = localStorage.getItem("token")
+    const token = useSelector((state) => state.token);
     console.log(token)
     const response = await fetch("http://localhost:3000/api/auth/getCartItems", {
       method:"GET",
